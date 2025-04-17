@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+//import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import API from '../config/api';
+//import API from '../config/api';
 import { apiFetch } from '../api';
 
 export const AuthContext = createContext();
