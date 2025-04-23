@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/home';
-import Login from './pages/login';
+import AuthPage from './pages/AuthPage';
 import AdminPortal from './pages/adminPortal';
 import BettingPortal from './pages/bettorPortal';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -12,7 +12,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/signup" element={<AuthPage />} />
         <Route
           path="/admin"
           element={

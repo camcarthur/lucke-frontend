@@ -6,6 +6,16 @@ import { apiFetch } from '../api';
 function BettingPortal() {
   const navigate = useNavigate();
   const { auth, logout } = useContext(AuthContext);
+
+  const [userBalance, setUserBalance] = useState(() =>
+    parseFloat(auth.user?.balance) || 0
+  );
+  useEffect(() => {
+    if (auth.user?.balance != null){
+      setUserBalance(parseFloat(auth.user.balance));
+    }
+  }, [auth.user]);
+
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedSubEvent, setSelectedSubEvent] = useState(null);
@@ -122,9 +132,11 @@ function BettingPortal() {
       if (data.error) {
         alert(`Error: ${data.error}`);
       } else {
+        const paid = parseFloat(selectedContestant.price);
         alert(
           `Mock Payment done! You purchased ${selectedContestant.name} for $${selectedContestant.price}`
         );
+        setUserBalance(bal => +(bal - paid).toFixed(2));
       }
       setSelectedContestant(null);
       setUserId('');
@@ -155,9 +167,14 @@ function BettingPortal() {
         <div>
           <h1>Betting Portal</h1>
           {auth.isLoggedIn && (
-            <p>
-              Logged in as <strong>{auth.user?.name}</strong> ({auth.role})
-            </p>
+            <>
+              <p>
+                Logged in as <strong>{auth.user.username}</strong> ({auth.role})
+              </p>
+              <p>
+                Balance: <strong>${userBalance.toFixed(2)}</strong>
+              </p>
+            </>
           )}
         </div>
         <div>
