@@ -50,27 +50,27 @@ function AdminPortal() {
     updated[index][field] = field === 'price' ? Number(value) : value;
     setMainContestants(updated);
   }
-  function handlePlaceBid(subIndex, cIndex) {
-    const subEvent = subEvents[subIndex];
-    const contestant = subEvent.contestants[cIndex];
-    const bid = contestant.userBid;
+  // function handlePlaceBid(subIndex, cIndex) {
+  //   const subEvent = subEvents[subIndex];
+  //   const contestant = subEvent.contestants[cIndex];
+  //   const bid = contestant.userBid;
   
-    if (!bid || isNaN(bid)) {
-      alert("Please enter a valid bid amount.");
-      return;
-    }
+  //   if (!bid || isNaN(bid)) {
+  //     alert("Please enter a valid bid amount.");
+  //     return;
+  //   }
   
-    console.log(`Placing bid on "${contestant.name}" with amount $${bid}`);
+  //   console.log(`Placing bid on "${contestant.name}" with amount $${bid}`);
   
-    // Optionally post to backend later
-    // fetch(`/api/events/${eventId}/bid`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ userId, individual: contestant.id, amount: bid }),
-    // });
+  //   // Optionally post to backend later
+  //   // fetch(`/api/events/${eventId}/bid`, {
+  //   //   method: 'POST',
+  //   //   headers: { 'Content-Type': 'application/json' },
+  //   //   body: JSON.stringify({ userId, individual: contestant.id, amount: bid }),
+  //   // });
   
-    alert(`Bid of $${bid} placed on ${contestant.name}`);
-  }
+  //   alert(`Bid of $${bid} placed on ${contestant.name}`);
+  // }
 
   function handleAddSubEvent() {
     const newSubEvent = {
