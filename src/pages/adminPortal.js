@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
+import { Trophy } from 'lucide-react';
 
 function AdminPortal() {
   const navigate = useNavigate();
@@ -48,6 +49,27 @@ function AdminPortal() {
     const updated = [...mainContestants];
     updated[index][field] = field === 'price' ? Number(value) : value;
     setMainContestants(updated);
+  }
+  function handlePlaceBid(subIndex, cIndex) {
+    const subEvent = subEvents[subIndex];
+    const contestant = subEvent.contestants[cIndex];
+    const bid = contestant.userBid;
+  
+    if (!bid || isNaN(bid)) {
+      alert("Please enter a valid bid amount.");
+      return;
+    }
+  
+    console.log(`Placing bid on "${contestant.name}" with amount $${bid}`);
+  
+    // Optionally post to backend later
+    // fetch(`/api/events/${eventId}/bid`, {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ userId, individual: contestant.id, amount: bid }),
+    // });
+  
+    alert(`Bid of $${bid} placed on ${contestant.name}`);
   }
 
   function handleAddSubEvent() {
@@ -338,7 +360,14 @@ function AdminPortal() {
                 <div key={c.id} className="d-flex justify-content-between align-items-center mb-2">
                   <span>
                     {c.name} — ${c.price}
-                    {ev.winningContestant === c.id && <strong> 🏆</strong>}
+                    {ev.winningContestant === c.id && (
+                      <Trophy
+                        size={16}
+                        strokeWidth={1.5}
+                        className="ms-2 text-warning"
+                        aria-label="Winner"
+                      />
+                    )}
                   </span>
                   <button
                     className="btn btn-sm btn-outline-success"
@@ -359,7 +388,14 @@ function AdminPortal() {
                         <div key={c.id} className="d-flex justify-content-between align-items-center mt-1">
                           <span>
                             {c.name} — ${c.price}
-                            {sub.winningContestant === c.id && <strong> 🏆</strong>}
+                            {sub.winningContestant === c.id && (
+                              <Trophy
+                                size={14}
+                                strokeWidth={1.4}
+                                className="ms-2 text-warning"
+                                aria-label="Winner"
+                              />
+                            )}
                           </span>
                           <button
                             className="btn btn-sm btn-outline-info"
