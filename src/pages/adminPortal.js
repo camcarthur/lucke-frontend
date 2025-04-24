@@ -50,27 +50,6 @@ function AdminPortal() {
     updated[index][field] = field === 'price' ? Number(value) : value;
     setMainContestants(updated);
   }
-  // function handlePlaceBid(subIndex, cIndex) {
-  //   const subEvent = subEvents[subIndex];
-  //   const contestant = subEvent.contestants[cIndex];
-  //   const bid = contestant.userBid;
-  
-  //   if (!bid || isNaN(bid)) {
-  //     alert("Please enter a valid bid amount.");
-  //     return;
-  //   }
-  
-  //   console.log(`Placing bid on "${contestant.name}" with amount $${bid}`);
-  
-  //   // Optionally post to backend later
-  //   // fetch(`/api/events/${eventId}/bid`, {
-  //   //   method: 'POST',
-  //   //   headers: { 'Content-Type': 'application/json' },
-  //   //   body: JSON.stringify({ userId, individual: contestant.id, amount: bid }),
-  //   // });
-  
-  //   alert(`Bid of $${bid} placed on ${contestant.name}`);
-  // }
 
   function handleAddSubEvent() {
     const newSubEvent = {
@@ -225,81 +204,79 @@ function AdminPortal() {
             </div>
 
             {hasSubEvents ? (
-            <div>
-              <h4>Sub Events</h4>
-              <button type="button" className="btn btn-secondary mb-3" onClick={handleAddSubEvent}>
-                Add Sub Event
-              </button>
-              {subEvents.map((subEvent, subIndex) => (
-                <div key={subEvent.id} className="border p-3 mb-3">
-                  <div className="mb-3">
-                    <label>Sub Event Name:</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={subEvent.name}
-                      onChange={(e) => handleSubEventNameChange(subIndex, e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label>How many contestants in this sub event?</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={subEvent.contestantCount}
-                      onChange={(e) =>
-                        handleSubEventContestantCountChange(subIndex, Number(e.target.value))
-                      }
-                      min="1"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label>Game Type:</label>
-                    <select
-                      className="form-control"
-                      value={subEvent.gameType || 'default'}
-                      onChange={(e) => handleSubEventGameTypeChange(subIndex, e.target.value)}
-                    >
-                      <option value="default">Default</option>
-                      <option value="first-come-first-serve">First Come First Serve</option>
-                      <option value="bidding">Bidding</option>
-                    </select>
-                  </div>
-
-                  {subEvent.contestants.map((contestant, cIndex) => (
-                    <div key={contestant.id} className="mb-3">
-                      <label>Contestant #{contestant.id} Name</label>
+              <div>
+                <h4>Sub Events</h4>
+                <button type="button" className="btn btn-secondary mb-3" onClick={handleAddSubEvent}>
+                  Add Sub Event
+                </button>
+                {subEvents.map((subEvent, subIndex) => (
+                  <div key={subEvent.id} className="border p-3 mb-3">
+                    <div className="mb-3">
+                      <label>Sub Event Name:</label>
                       <input
                         type="text"
                         className="form-control"
-                        value={contestant.name}
-                        onChange={(e) =>
-                          handleSubEventContestantChange(subIndex, cIndex, 'name', e.target.value)
-                        }
+                        value={subEvent.name}
+                        onChange={(e) => handleSubEventNameChange(subIndex, e.target.value)}
                         required
                       />
-
-                      <label>
-                        {subEvent.gameType === 'bidding' ? 'Initial Bid Price' : 'Price'}
-                      </label>
+                    </div>
+                    <div className="mb-3">
+                      <label>How many contestants in this sub event?</label>
                       <input
                         type="number"
                         className="form-control"
-                        value={contestant.price}
+                        value={subEvent.contestantCount}
                         onChange={(e) =>
-                          handleSubEventContestantChange(subIndex, cIndex, 'price', e.target.value)
+                          handleSubEventContestantCountChange(subIndex, Number(e.target.value))
                         }
-                        min="0"
-                        required
+                        min="1"
                       />
-
                     </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-            //) : null}
+                    <div className="mb-3">
+                      <label>Game Type:</label>
+                      <select
+                        className="form-control"
+                        value={subEvent.gameType || 'default'}
+                        onChange={(e) => handleSubEventGameTypeChange(subIndex, e.target.value)}
+                      >
+                        <option value="default">Default</option>
+                        <option value="first-come-first-serve">First Come First Serve</option>
+                        <option value="bidding">Bidding</option>
+                      </select>
+                    </div>
+
+                    {subEvent.contestants.map((contestant, cIndex) => (
+                      <div key={contestant.id} className="mb-3">
+                        <label>Contestant #{contestant.id} Name</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={contestant.name}
+                          onChange={(e) =>
+                            handleSubEventContestantChange(subIndex, cIndex, 'name', e.target.value)
+                          }
+                          required
+                        />
+
+                        <label>
+                          {subEvent.gameType === 'bidding' ? 'Initial Bid Price' : 'Price'}
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={contestant.price}
+                          onChange={(e) =>
+                            handleSubEventContestantChange(subIndex, cIndex, 'price', e.target.value)
+                          }
+                          min="0"
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
             ) : (
               <div>
                 <h4>Main Event Contestants</h4>
@@ -361,20 +338,17 @@ function AdminPortal() {
                   <span>
                     {c.name} — ${c.price}
                     {ev.winningContestant === c.id && (
-                      <Trophy
-                        size={16}
-                        strokeWidth={1.5}
-                        className="ms-2 text-warning"
-                        aria-label="Winner"
-                      />
+                      <Trophy size={16} strokeWidth={1.5} className="ms-2 text-warning" aria-label="Winner" />
                     )}
                   </span>
-                  <button
-                    className="btn btn-sm btn-outline-success"
-                    onClick={() => handleDeclareWinner(ev.id, c.id)}
-                  >
-                    Set Winner
-                  </button>
+                  {ev.status === 'open' && (
+                    <button
+                      className="btn btn-sm btn-outline-success"
+                      onClick={() => handleDeclareWinner(ev.id, c.id)}
+                    >
+                      Set Winner
+                    </button>
+                  )}
                 </div>
               ))}
 
@@ -389,20 +363,17 @@ function AdminPortal() {
                           <span>
                             {c.name} — ${c.price}
                             {sub.winningContestant === c.id && (
-                              <Trophy
-                                size={14}
-                                strokeWidth={1.4}
-                                className="ms-2 text-warning"
-                                aria-label="Winner"
-                              />
+                              <Trophy size={14} strokeWidth={1.4} className="ms-2 text-warning" aria-label="Winner" />
                             )}
                           </span>
-                          <button
-                            className="btn btn-sm btn-outline-info"
-                            onClick={() => handleDeclareSubWinner(ev.id, sub.id, c.id)}
-                          >
-                            Set Sub Winner
-                          </button>
+                          {sub.status === 'open' && (
+                            <button
+                              className="btn btn-sm btn-outline-info"
+                              onClick={() => handleDeclareSubWinner(ev.id, sub.id, c.id)}
+                            >
+                              Set Sub Winner
+                            </button>
+                          )}
                         </div>
                       ))}
                       {sub.status === 'open' && (
