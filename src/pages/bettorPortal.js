@@ -1,74 +1,70 @@
+// src/bettorPanel.js
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';      // make sure Bootstrap is installed
 import { AuthContext } from '../context/AuthContext';
 import { apiFetch } from '../api';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
-function BettingPortal() {
+export default function BettingPortal() {
   const navigate = useNavigate();
   const { auth, logout } = useContext(AuthContext);
 
+  // --- state hooks ---
   const [userBalance, setUserBalance] = useState(() =>
     parseFloat(auth.user?.balance) || 0
   );
-  useEffect(() => {
-    if (auth.user?.balance != null){
-      setUserBalance(parseFloat(auth.user.balance));
-    }
-  }, [auth.user]);
-
   const [events, setEvents] = useState([]);
+  const [yourEvents, setYourEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedSubEvent, setSelectedSubEvent] = useState(null);
   const [selectedContestant, setSelectedContestant] = useState(null);
   const [userId, setUserId] = useState('');
-  const [yourEvents, setYourEvents] = useState([]);
   const [userBids, setUserBids] = useState({});
+
+  // --- effects ---
+  useEffect(() => {
+    if (auth.user?.balance != null) {
+      setUserBalance(parseFloat(auth.user.balance));
+    }
+  }, [auth.user]);
 
   useEffect(() => {
     fetchAllEvents();
   }, []);
 
+  // --- data fetching / handlers ---
   async function fetchAllEvents() {
     try {
-      const res = await apiFetch('/api/events', {
-        credentials: 'include'
-      });
+      const res = await apiFetch('/api/events', { credentials: 'include' });
       const data = await res.json();
       setEvents(data);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
     }
   }
 
-  // Refresh selected event data after a bet is placed.
   async function refreshSelectedEvent() {
-    if (selectedEvent) {
-      try {
-        const res = await apiFetch(`/api/events/${selectedEvent.id}`, {
-          credentials: 'include'
-        });
-        const updatedEvent = await res.json();
-        setSelectedEvent(updatedEvent);
-        if (selectedSubEvent) {
-          // Find and update the selected sub-event from the updated event.
-          const updatedSubEvent = updatedEvent.subEvents.find(
-            (se) => se.id === selectedSubEvent.id
-          );
-          setSelectedSubEvent(updatedSubEvent);
-        }
-      } catch (error) {
-        console.error('Error refreshing selected event:', error);
+    if (!selectedEvent) return;
+    try {
+      const res = await apiFetch(
+        `/api/events/${selectedEvent.id}`,
+        { credentials: 'include' }
+      );
+      const updated = await res.json();
+      setSelectedEvent(updated);
+      if (selectedSubEvent) {
+        const newSub = updated.subEvents.find(se => se.id === selectedSubEvent.id);
+        setSelectedSubEvent(newSub);
       }
+    } catch (err) {
+      console.error(err);
     }
   }
 
   async function placeUserBid(eventId, subEventId, contestantId, amount) {
     if (!amount || isNaN(amount)) {
-      alert("Please enter a valid bid amount.");
-      return;
+      return alert('Please enter a valid bid amount.');
     }
-
     try {
       const res = await apiFetch(`/api/events/${eventId}/bid`, {
         method: 'POST',
@@ -81,48 +77,27 @@ function BettingPortal() {
         })
       });
       const data = await res.json();
-      if (data.error) {
-        alert(`Error: ${data.error}`);
-      } else {
+      if (data.error) alert(`Error: ${data.error}`);
+      else {
         alert(data.message);
         refreshSelectedEvent();
       }
     } catch (err) {
-      console.error("Bid submission failed", err);
-      alert("Bid failed. Try again.");
-    }
-  }
-
-  function handleSelectEvent(ev) {
-    setSelectedEvent(ev);
-    setSelectedSubEvent(null); // reset any previously selected sub event
-    setSelectedContestant(null);
-  }
-
-  function handleSelectContestant(contestant) {
-    setSelectedContestant(contestant);
-  }
-
-  function handleAddToYourEvents() {
-    if (selectedEvent && !yourEvents.some(event => event.id === selectedEvent.id)) {
-      setYourEvents([...yourEvents, selectedEvent]);
+      console.error(err);
+      alert('Bid failed. Try again.');
     }
   }
 
   async function handlePay() {
     if (!selectedEvent || !selectedContestant || !userId) {
-      alert('Missing info: userId, event, or contestant');
-      return;
+      return alert('Missing info: userId, event, or contestant');
     }
-    
-    // Include subEventId if a sub event is selected.
     const body = {
       userId,
       contestantId: selectedContestant.id,
       amount: selectedContestant.price,
       ...(selectedSubEvent && { subEventId: selectedSubEvent.id })
     };
-
     try {
       const res = await apiFetch(`/api/events/${selectedEvent.id}/bets`, {
         method: 'POST',
@@ -130,96 +105,97 @@ function BettingPortal() {
         body: JSON.stringify(body)
       });
       const data = await res.json();
-      if (data.error) {
-        alert(`Error: ${data.error}`);
-      } else {
-        const paid = parseFloat(selectedContestant.price);
+      if (data.error) alert(`Error: ${data.error}`);
+      else {
         alert(
           `Mock Payment done! You purchased ${selectedContestant.name} for $${selectedContestant.price}`
         );
-        setUserBalance(bal => +(bal - paid).toFixed(2));
+        setUserBalance(bal =>
+          +(bal - parseFloat(selectedContestant.price)).toFixed(2)
+        );
       }
       setSelectedContestant(null);
       setUserId('');
-      // Refresh the selected event (and sub-event) data so that bets update in the UI.
       refreshSelectedEvent();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
+      alert('Payment failed. Try again.');
     }
   }
 
+  function handleSelectEvent(ev) {
+    setSelectedEvent(ev);
+    setSelectedSubEvent(null);
+    setSelectedContestant(null);
+  }
+  function handleSelectContestant(c) {
+    setSelectedContestant(c);
+  }
+  function handleAddToYourEvents() {
+    if (selectedEvent && !yourEvents.some(e => e.id === selectedEvent.id)) {
+      setYourEvents(prev => [...prev, selectedEvent]);
+    }
+  }
   function handleCreateEvent() {
     navigate('/admin');
   }
-
   async function handleLogout() {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    await logout();
+    navigate('/login');
   }
 
+  // --- JSX render ---
   return (
-    <div className="container pt-4">
-      {/* Header with title, logout and conditionally rendered "Create Event" button */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1>Betting Portal</h1>
-          {auth.isLoggedIn && (
-            <>
-              <p>
-                Logged in as <strong>{auth.user.username}</strong> ({auth.role})
-              </p>
-              <p>
-                Balance: <strong>${userBalance.toFixed(2)}</strong>
-              </p>
-            </>
-          )}
-        </div>
-        <div>
-          {auth.isLoggedIn && (
-            <button className="btn btn-secondary me-2" onClick={handleLogout}>
-              Logout
-            </button>
-          )}
-          {auth.isLoggedIn && auth.role === 'admin' && (
-            <button className="btn btn-primary" onClick={handleCreateEvent}>
-              Create Event
-            </button>
-          )}
-        </div>
+    <div className="container-fluid py-4">
+      {/* HEADER */}
+      <div className="d-flex justify-content-between align-items-center mb-5 border-bottom">
+        <h2 className="mb-0">Betting Portal</h2>
+        {auth.isLoggedIn && (
+          <div className="text-muted small">
+            {auth.user.username} | Balance: ${userBalance.toFixed(2)}
+          </div>
+        )}
       </div>
 
       <div className="row">
-        {/* Left column: Your Events and All Events */}
-        <div className="col-md-4">
-          <h3>Your Events</h3>
-          <ul className="list-group mb-4">
-            {yourEvents.length > 0 ? (
-              yourEvents.map((ev) => (
-                <li key={ev.id} className="list-group-item">
-                  <strong>{ev.name}</strong> (ID: {ev.id})
+        {/* SIDEBAR */}
+        <div className="col-md-4 mb-4">
+          {/* Your Events */}
+          <div className="card shadow-sm mb-4">
+            <div className="card-header">
+              <h5 className="mb-0">Your Events</h5>
+            </div>
+            <ul className="list-group list-group-flush">
+              {yourEvents.length ? (
+                yourEvents.map(ev => (
+                  <li key={ev.id} className="list-group-item">
+                    {ev.name}{' '}
+                    <small className="text-muted">#{ev.id}</small>
+                  </li>
+                ))
+              ) : (
+                <li className="list-group-item text-muted">
+                  None added yet
                 </li>
-              ))
-            ) : (
-              <li className="list-group-item">No events added</li>
-            )}
-          </ul>
+              )}
+            </ul>
+          </div>
 
-          <h3>All Events</h3>
-          <ul className="list-group">
-            {Array.isArray(events) &&
-              events.map((ev) => (
+          {/* All Events */}
+          <div className="card shadow-sm">
+            <div className="card-header">
+              <h5 className="mb-0">All Events</h5>
+            </div>
+            <ul className="list-group list-group-flush">
+              {events.map(ev => (
                 <li
                   key={ev.id}
                   className="list-group-item d-flex justify-content-between align-items-center"
                 >
                   <div>
-                    <strong>{ev.name}</strong> (ID: {ev.id})
+                    <strong>{ev.name}</strong>
                     <br />
-                    Status: {ev.status}
+                    <span className="badge bg-info">{ev.status}</span>
                   </div>
                   <button
                     className="btn btn-sm btn-outline-primary"
@@ -229,140 +205,85 @@ function BettingPortal() {
                   </button>
                 </li>
               ))}
-          </ul>
+            </ul>
+          </div>
         </div>
 
-        {/* Right column: Selected event details and actions */}
+        {/* MAIN PANEL */}
         <div className="col-md-8">
-          {selectedEvent ? (
-            <div className="card">
-              <div className="card-body">
-                <h4 className="card-title">
-                  {selectedEvent.name} (Status: {selectedEvent.status})
-                </h4>
-                <button
-                  className="btn btn-sm btn-info mb-3"
-                  onClick={handleAddToYourEvents}
-                  disabled={yourEvents.some(event => event.id === selectedEvent.id)}
+          {!selectedEvent ? (
+            <div className="text-center text-muted py-5">
+              Select an event
+            </div>
+          ) : (
+            <div className="card shadow-sm">
+              <div className="card-header d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">{selectedEvent.name}</h5>
+                <span
+                  className={`badge bg-${
+                    selectedEvent.status === 'open' ? 'success' : 'danger'
+                  }`}
                 >
-                  {yourEvents.some(event => event.id === selectedEvent.id)
-                    ? 'Already Added'
-                    : 'Add to Your Events'}
-                </button>
-                {selectedEvent.status === 'closed' && (
-                  <p className="text-danger">
-                    This event is closed. No purchases allowed.
-                  </p>
-                )}
+                  {selectedEvent.status.toUpperCase()}
+                </span>
+              </div>
+              <div className="card-body">
+                {/* TOP BUTTONS */}
+                <div className="d-flex mb-3">
+                  <button
+                    className="btn btn-sm btn-outline-info me-2"
+                    onClick={handleAddToYourEvents}
+                    disabled={yourEvents.some(e => e.id === selectedEvent.id)}
+                  >
+                    {yourEvents.some(e => e.id === selectedEvent.id)
+                      ? 'Added'
+                      : 'Add to Your Events'}
+                  </button>
+                  {auth.role === 'admin' && (
+                    <button
+                      className="btn btn-sm btn-primary me-auto"
+                      onClick={handleCreateEvent}
+                    >
+                      Create Event
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </div>
 
-                {/* Sub Events Section */}
-                {selectedEvent.subEvents && selectedEvent.subEvents.length > 0 && (
-                  <div className="mb-3">
-                    <h5>Sub Events</h5>
-                    <ul className="list-group">
-                      {selectedEvent.subEvents.map((subEv, idx) => (
-                        <li
-                          key={idx}
-                          className="list-group-item d-flex justify-content-between align-items-center"
+                {/* SUB-EVENTS */}
+                {selectedEvent.subEvents?.length > 0 && (
+                  <div className="mb-4">
+                    <h6>Sub Events</h6>
+                    <div className="d-flex flex-wrap gap-2">
+                      {selectedEvent.subEvents.map(se => (
+                        <button
+                          key={se.id}
+                          className={`btn btn-sm ${
+                            selectedSubEvent?.id === se.id
+                              ? 'btn-primary'
+                              : 'btn-outline-primary'
+                          }`}
+                          onClick={() => {
+                            setSelectedSubEvent(se);
+                            setSelectedContestant(null);
+                          }}
                         >
-                          <span>{subEv.name}</span>
-                          <button
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => setSelectedSubEvent(subEv)}
-                          >
-                            {selectedSubEvent &&
-                            selectedSubEvent.name === subEv.name
-                              ? 'Selected'
-                              : 'Select'}
-                          </button>
-                        </li>
+                          {se.name}
+                        </button>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
 
-                <hr />
-                <h5>Contestants:</h5>
-                {selectedEvent.subEvents && selectedEvent.subEvents.length > 0 ? (
-                  selectedSubEvent ? (
-                    Array.isArray(selectedSubEvent.contestants) &&
-                    selectedSubEvent.contestants.length > 0 ? (
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Price</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {selectedSubEvent.contestants.map((c) => {
-                            // Check for first-come-first-serve bets.
-                            const alreadyPlaced =
-                              selectedSubEvent.gameType === 'first-come-first-serve' &&
-                              selectedSubEvent.bets &&
-                              selectedSubEvent.bets.some((b) => b.contestantId === c.id);
-                            return (
-                              <tr key={c.id}>
-                                <td>{c.id}</td>
-                                <td>{c.name}</td>
-                                <td>${c.price}</td>
-                                <td>
-                                  {selectedEvent.status === 'open' &&
-                                    yourEvents.some(event => event.id === selectedEvent.id) && (
-                                      selectedSubEvent.gameType === 'bidding' ? (
-                                        <div className="d-flex">
-                                          <input
-                                            type="number"
-                                            className="form-control form-control-sm me-2"
-                                            placeholder="Your bid"
-                                            value={userBids[c.id] || ''}
-                                            onChange={(e) =>
-                                              setUserBids((prev) => ({ ...prev, [c.id]: e.target.value }))
-                                            }
-                                            min="0"
-                                          />
-                                          <button
-                                            className="btn btn-sm btn-primary"
-                                            onClick={() => {
-                                              placeUserBid(selectedEvent.id, selectedSubEvent.id, c.id, userBids[c.id]);
-                                            }}
-                                          >
-                                            Bid
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        alreadyPlaced ? (
-                                          <button className="btn btn-sm btn-danger" disabled>
-                                            Unavailable
-                                          </button>
-                                        ) : (
-                                          <button
-                                            className="btn btn-sm btn-success"
-                                            onClick={() => handleSelectContestant(c)}
-                                          >
-                                            Buy
-                                          </button>
-                                        )
-                                      )
-                                    )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p>No contestants in this sub event.</p>
-                    )
-                  ) : (
-                    <p>Please select a sub event to view its contestants.</p>
-                  )
-                ) : Array.isArray(selectedEvent.contestants) &&
-                  selectedEvent.contestants.length > 0 ? (
-                  <table className="table">
-                    <thead>
+                {/* CONTESTANTS TABLE */}
+                <div className="table-responsive">
+                  <table className="table table-hover table-striped">
+                    <thead className="table-light">
                       <tr>
                         <th>ID</th>
                         <th>Name</th>
@@ -371,60 +292,96 @@ function BettingPortal() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedEvent.contestants.map((c) => (
-                        <tr key={c.id}>
-                          <td>{c.id}</td>
-                          <td>{c.name}</td>
-                          <td>${c.price}</td>
-                          <td>
-                            {selectedEvent.status === 'open' &&
-                              yourEvents.some(event => event.id === selectedEvent.id) && (
-                                <button
-                                  className="btn btn-sm btn-success"
-                                  onClick={() => handleSelectContestant(c)}
-                                >
-                                  Buy
-                                </button>
-                              )}
-                          </td>
-                        </tr>
-                      ))}
+                      {(selectedSubEvent?.contestants ?? selectedEvent.contestants).map(
+                        c => {
+                          const isBidding =
+                            selectedSubEvent?.gameType === 'bidding';
+                          const fcfs =
+                            selectedSubEvent?.gameType ===
+                            'first-come-first-serve';
+                          const already =
+                            fcfs &&
+                            selectedSubEvent.bets.some(
+                              b => b.contestantId === c.id
+                            );
+                          return (
+                            <tr key={c.id}>
+                              <td>{c.id}</td>
+                              <td>{c.name}</td>
+                              <td>${c.price}</td>
+                              <td>
+                                {isBidding ? (
+                                  <div className="d-flex gap-2">
+                                    <input
+                                      type="number"
+                                      className="form-control form-control-sm w-50"
+                                      placeholder="Bid"
+                                      value={userBids[c.id] || ''}
+                                      onChange={e =>
+                                        setUserBids(prev => ({
+                                          ...prev,
+                                          [c.id]: e.target.value
+                                        }))
+                                      }
+                                    />
+                                    <button
+                                      className="btn btn-sm btn-primary"
+                                      onClick={() =>
+                                        placeUserBid(
+                                          selectedEvent.id,
+                                          selectedSubEvent.id,
+                                          c.id,
+                                          userBids[c.id]
+                                        )
+                                      }
+                                    >
+                                      Bid
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    className={`btn btn-sm ${
+                                      already
+                                        ? 'btn-outline-danger disabled'
+                                        : 'btn-success'
+                                    }`}
+                                    onClick={() => handleSelectContestant(c)}
+                                  >
+                                    {already ? 'Unavailable' : 'Buy'}
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        }
+                      )}
                     </tbody>
                   </table>
-                ) : (
-                  <p>No contestants</p>
-                )}
+                </div>
 
-                {selectedEvent.status === 'open' && selectedContestant && (
-                  <div className="mt-3 border p-3">
-                    <h5>Mock Payment</h5>
-                    <p>
-                      You selected: <strong>{selectedContestant.name}</strong> for $
-                      <strong>{selectedContestant.price}</strong>
-                    </p>
-                    <div className="mb-2">
-                      <label>User ID (Name): </label>
+                {/* MOCK PAYMENT */}
+                {selectedContestant && (
+                  <div className="border p-4 mt-4 rounded bg-light">
+                    <h6>Mock Payment</h6>
+                    <div className="mb-3">
+                      <label className="form-label">User ID (Name)</label>
                       <input
                         type="text"
                         className="form-control"
                         value={userId}
-                        onChange={(e) => setUserId(e.target.value)}
+                        onChange={e => setUserId(e.target.value)}
                       />
                     </div>
                     <button className="btn btn-primary" onClick={handlePay}>
-                      Pay with Mock Money
+                      Pay ${selectedContestant.price}
                     </button>
                   </div>
                 )}
               </div>
             </div>
-          ) : (
-            <p className="text-muted">Select an event from the list</p>
           )}
         </div>
       </div>
     </div>
   );
 }
-
-export default BettingPortal;
