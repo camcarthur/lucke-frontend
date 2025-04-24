@@ -1,7 +1,7 @@
 // src/bettorPanel.js
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';      // make sure Bootstrap is installed
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthContext } from '../context/AuthContext';
 import { apiFetch } from '../api';
 
@@ -9,7 +9,7 @@ export default function BettingPortal() {
   const navigate = useNavigate();
   const { auth, logout } = useContext(AuthContext);
 
-  // --- state hooks ---
+  // State
   const [userBalance, setUserBalance] = useState(() =>
     parseFloat(auth.user?.balance) || 0
   );
@@ -21,7 +21,7 @@ export default function BettingPortal() {
   const [userId, setUserId] = useState('');
   const [userBids, setUserBids] = useState({});
 
-  // --- effects ---
+  // Effects
   useEffect(() => {
     if (auth.user?.balance != null) {
       setUserBalance(parseFloat(auth.user.balance));
@@ -32,7 +32,7 @@ export default function BettingPortal() {
     fetchAllEvents();
   }, []);
 
-  // --- data fetching / handlers ---
+  // Fetch all events
   async function fetchAllEvents() {
     try {
       const res = await apiFetch('/api/events', { credentials: 'include' });
@@ -43,6 +43,7 @@ export default function BettingPortal() {
     }
   }
 
+  // Refresh current event
   async function refreshSelectedEvent() {
     if (!selectedEvent) return;
     try {
@@ -53,7 +54,9 @@ export default function BettingPortal() {
       const updated = await res.json();
       setSelectedEvent(updated);
       if (selectedSubEvent) {
-        const newSub = updated.subEvents.find(se => se.id === selectedSubEvent.id);
+        const newSub = updated.subEvents.find(
+          (se) => se.id === selectedSubEvent.id
+        );
         setSelectedSubEvent(newSub);
       }
     } catch (err) {
@@ -61,6 +64,7 @@ export default function BettingPortal() {
     }
   }
 
+  // Place a bid
   async function placeUserBid(eventId, subEventId, contestantId, amount) {
     if (!amount || isNaN(amount)) {
       return alert('Please enter a valid bid amount.');
@@ -73,21 +77,19 @@ export default function BettingPortal() {
           userId,
           individual: contestantId,
           amount: Number(amount),
-          ...(subEventId && { subEventId })
-        })
+          ...(subEventId && { subEventId }),
+        }),
       });
       const data = await res.json();
       if (data.error) alert(`Error: ${data.error}`);
-      else {
-        alert(data.message);
-        refreshSelectedEvent();
-      }
+      else refreshSelectedEvent();
     } catch (err) {
       console.error(err);
       alert('Bid failed. Try again.');
     }
   }
 
+  // Mock payment
   async function handlePay() {
     if (!selectedEvent || !selectedContestant || !userId) {
       return alert('Missing info: userId, event, or contestant');
@@ -96,21 +98,21 @@ export default function BettingPortal() {
       userId,
       contestantId: selectedContestant.id,
       amount: selectedContestant.price,
-      ...(selectedSubEvent && { subEventId: selectedSubEvent.id })
+      ...(selectedSubEvent && { subEventId: selectedSubEvent.id }),
     };
     try {
       const res = await apiFetch(`/api/events/${selectedEvent.id}/bets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.error) alert(`Error: ${data.error}`);
       else {
         alert(
-          `Mock Payment done! You purchased ${selectedContestant.name} for $${selectedContestant.price}`
+          `Purchased ${selectedContestant.name} for $${selectedContestant.price}`
         );
-        setUserBalance(bal =>
+        setUserBalance((bal) =>
           +(bal - parseFloat(selectedContestant.price)).toFixed(2)
         );
       }
@@ -123,6 +125,7 @@ export default function BettingPortal() {
     }
   }
 
+  // Handlers
   function handleSelectEvent(ev) {
     setSelectedEvent(ev);
     setSelectedSubEvent(null);
@@ -132,8 +135,11 @@ export default function BettingPortal() {
     setSelectedContestant(c);
   }
   function handleAddToYourEvents() {
-    if (selectedEvent && !yourEvents.some(e => e.id === selectedEvent.id)) {
-      setYourEvents(prev => [...prev, selectedEvent]);
+    if (
+      selectedEvent &&
+      !yourEvents.some((e) => e.id === selectedEvent.id)
+    ) {
+      setYourEvents((prev) => [...prev, selectedEvent]);
     }
   }
   function handleCreateEvent() {
@@ -144,11 +150,11 @@ export default function BettingPortal() {
     navigate('/login');
   }
 
-  // --- JSX render ---
+  // Render
   return (
     <div className="container-fluid py-4">
-      {/* HEADER */}
-      <div className="d-flex justify-content-between align-items-center mb-5 border-bottom">
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4 border-bottom">
         <h2 className="mb-0">Betting Portal</h2>
         {auth.isLoggedIn && (
           <div className="text-muted small">
@@ -157,9 +163,9 @@ export default function BettingPortal() {
         )}
       </div>
 
-      <div className="row">
-        {/* SIDEBAR */}
-        <div className="col-md-4 mb-4">
+      <div className="row gx-3 gy-4">
+        {/* Sidebar */}
+        <aside className="col-12 col-md-4">
           {/* Your Events */}
           <div className="card shadow-sm mb-4">
             <div className="card-header">
@@ -167,7 +173,7 @@ export default function BettingPortal() {
             </div>
             <ul className="list-group list-group-flush">
               {yourEvents.length ? (
-                yourEvents.map(ev => (
+                yourEvents.map((ev) => (
                   <li key={ev.id} className="list-group-item">
                     {ev.name}{' '}
                     <small className="text-muted">#{ev.id}</small>
@@ -175,7 +181,7 @@ export default function BettingPortal() {
                 ))
               ) : (
                 <li className="list-group-item text-muted">
-                  None added yet
+                  No events added
                 </li>
               )}
             </ul>
@@ -187,7 +193,7 @@ export default function BettingPortal() {
               <h5 className="mb-0">All Events</h5>
             </div>
             <ul className="list-group list-group-flush">
-              {events.map(ev => (
+              {events.map((ev) => (
                 <li
                   key={ev.id}
                   className="list-group-item d-flex justify-content-between align-items-center"
@@ -207,10 +213,10 @@ export default function BettingPortal() {
               ))}
             </ul>
           </div>
-        </div>
+        </aside>
 
-        {/* MAIN PANEL */}
-        <div className="col-md-8">
+        {/* Main Panel */}
+        <main className="col-12 col-md-8">
           {!selectedEvent ? (
             <div className="text-center text-muted py-5">
               Select an event
@@ -228,14 +234,16 @@ export default function BettingPortal() {
                 </span>
               </div>
               <div className="card-body">
-                {/* TOP BUTTONS */}
+                {/* Action Buttons */}
                 <div className="d-flex mb-3">
                   <button
                     className="btn btn-sm btn-outline-info me-2"
                     onClick={handleAddToYourEvents}
-                    disabled={yourEvents.some(e => e.id === selectedEvent.id)}
+                    disabled={yourEvents.some(
+                      (e) => e.id === selectedEvent.id
+                    )}
                   >
-                    {yourEvents.some(e => e.id === selectedEvent.id)
+                    {yourEvents.some((e) => e.id === selectedEvent.id)
                       ? 'Added'
                       : 'Add to Your Events'}
                   </button>
@@ -255,12 +263,12 @@ export default function BettingPortal() {
                   </button>
                 </div>
 
-                {/* SUB-EVENTS */}
+                {/* Sub-Events */}
                 {selectedEvent.subEvents?.length > 0 && (
                   <div className="mb-4">
                     <h6>Sub Events</h6>
                     <div className="d-flex flex-wrap gap-2">
-                      {selectedEvent.subEvents.map(se => (
+                      {selectedEvent.subEvents.map((se) => (
                         <button
                           key={se.id}
                           className={`btn btn-sm ${
@@ -280,7 +288,7 @@ export default function BettingPortal() {
                   </div>
                 )}
 
-                {/* CONTESTANTS TABLE */}
+                {/* Contestants Table */}
                 <div className="table-responsive">
                   <table className="table table-hover table-striped">
                     <thead className="table-light">
@@ -293,7 +301,7 @@ export default function BettingPortal() {
                     </thead>
                     <tbody>
                       {(selectedSubEvent?.contestants ?? selectedEvent.contestants).map(
-                        c => {
+                        (c) => {
                           const isBidding =
                             selectedSubEvent?.gameType === 'bidding';
                           const fcfs =
@@ -302,7 +310,7 @@ export default function BettingPortal() {
                           const already =
                             fcfs &&
                             selectedSubEvent.bets.some(
-                              b => b.contestantId === c.id
+                              (b) => b.contestantId === c.id
                             );
                           return (
                             <tr key={c.id}>
@@ -317,10 +325,10 @@ export default function BettingPortal() {
                                       className="form-control form-control-sm w-50"
                                       placeholder="Bid"
                                       value={userBids[c.id] || ''}
-                                      onChange={e =>
-                                        setUserBids(prev => ({
+                                      onChange={(e) =>
+                                        setUserBids((prev) => ({
                                           ...prev,
-                                          [c.id]: e.target.value
+                                          [c.id]: e.target.value,
                                         }))
                                       }
                                     />
@@ -359,20 +367,25 @@ export default function BettingPortal() {
                   </table>
                 </div>
 
-                {/* MOCK PAYMENT */}
+                {/* Mock Payment */}
                 {selectedContestant && (
                   <div className="border p-4 mt-4 rounded bg-light">
                     <h6>Mock Payment</h6>
                     <div className="mb-3">
-                      <label className="form-label">User ID (Name)</label>
+                      <label className="form-label">
+                        User ID (Name)
+                      </label>
                       <input
                         type="text"
                         className="form-control"
                         value={userId}
-                        onChange={e => setUserId(e.target.value)}
+                        onChange={(e) => setUserId(e.target.value)}
                       />
                     </div>
-                    <button className="btn btn-primary" onClick={handlePay}>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handlePay}
+                    >
                       Pay ${selectedContestant.price}
                     </button>
                   </div>
@@ -380,7 +393,7 @@ export default function BettingPortal() {
               </div>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );
