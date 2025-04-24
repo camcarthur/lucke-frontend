@@ -118,12 +118,23 @@ function AdminPortal() {
       const res = await apiFetch(`/api/events/${eventId}/close`, {
         method: 'POST'
       });
-      await res.json();
+      const data = await res.json();
+  
+      if (!res.ok) {
+        console.error('❌ Error closing event:', data.error);
+        console.debug('🛠️ Debug info:', data.debug);  // <== This line is crucial
+        alert(`Error closing event: ${data.error}`);
+        return;
+      }
+  
+      console.log('✅ Event closed:', data.message);
+      console.debug('🛠️ Debug info:', data.debug);
       fetchEvents();
     } catch (error) {
-      console.error(error);
+      console.error('[handleClose] Unexpected error:', error);
+      alert('Unexpected error closing event.');
     }
-  }
+  }  
 
   async function handleDeclareWinner(eventId, contestantId) {
     try {
