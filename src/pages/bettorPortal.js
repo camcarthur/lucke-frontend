@@ -154,11 +154,29 @@ export default function BettingPortal() {
   return (
     <div className="container-fluid py-4">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4 border-bottom">
+      <div className="d-flex justify-content-between align-items-start mb-4 border-bottom pb-2">
         <h2 className="mb-0">Betting Portal</h2>
         {auth.isLoggedIn && (
-          <div className="text-muted small">
-            {auth.user.username} | Balance: ${userBalance.toFixed(2)}
+          <div className="d-flex flex-column align-items-end">
+            <div>
+              {auth.role === 'admin' && (
+                <button
+                  className="btn btn-sm btn-primary me-2"
+                  onClick={handleCreateEvent}
+                >
+                  Create Event
+                </button>
+              )}
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+            <div className="text-muted small mt-1">
+              {auth.user.username} | Balance: ${userBalance.toFixed(2)}
+            </div>
           </div>
         )}
       </div>
@@ -247,20 +265,11 @@ export default function BettingPortal() {
                       ? 'Added'
                       : 'Add to Your Events'}
                   </button>
-                  {auth.role === 'admin' && (
-                    <button
-                      className="btn btn-sm btn-primary me-auto"
-                      onClick={handleCreateEvent}
-                    >
-                      Create Event
-                    </button>
-                  )}
-                  <button
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
+
+                  {/* Admin Create Event moved to header */}
+
+                  {/* Logout moved to header */}
+
                 </div>
 
                 {/* Sub-Events */}
@@ -300,69 +309,68 @@ export default function BettingPortal() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(selectedSubEvent?.contestants ?? selectedEvent.contestants).map(
-                        (c) => {
-                          const isBidding =
-                            selectedSubEvent?.gameType === 'bidding';
-                          const fcfs =
-                            selectedSubEvent?.gameType ===
-                            'first-come-first-serve';
-                          const already =
-                            fcfs &&
-                            selectedSubEvent.bets.some(
-                              (b) => b.contestantId === c.id
-                            );
-                          return (
-                            <tr key={c.id}>
-                              <td>{c.id}</td>
-                              <td>{c.name}</td>
-                              <td>${c.price}</td>
-                              <td>
-                                {isBidding ? (
-                                  <div className="d-flex gap-2">
-                                    <input
-                                      type="number"
-                                      className="form-control form-control-sm w-50"
-                                      placeholder="Bid"
-                                      value={userBids[c.id] || ''}
-                                      onChange={(e) =>
-                                        setUserBids((prev) => ({
-                                          ...prev,
-                                          [c.id]: e.target.value,
-                                        }))
-                                      }
-                                    />
-                                    <button
-                                      className="btn btn-sm btn-primary"
-                                      onClick={() =>
-                                        placeUserBid(
-                                          selectedEvent.id,
-                                          selectedSubEvent.id,
-                                          c.id,
-                                          userBids[c.id]
-                                        )
-                                      }
-                                    >
-                                      Bid
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    className={`btn btn-sm ${
-                                      already
-                                        ? 'btn-outline-danger disabled'
-                                        : 'btn-success'
-                                    }`}
-                                    onClick={() => handleSelectContestant(c)}
-                                  >
-                                    {already ? 'Unavailable' : 'Buy'}
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
+                      {(selectedSubEvent?.contestants ??
+                        selectedEvent.contestants).map((c) => {
+                        const isBidding =
+                          selectedSubEvent?.gameType === 'bidding';
+                        const fcfs =
+                          selectedSubEvent?.gameType ===
+                          'first-come-first-serve';
+                        const already =
+                          fcfs &&
+                          selectedSubEvent.bets.some(
+                            (b) => b.contestantId === c.id
                           );
-                        }
-                      )}
+                        return (
+                          <tr key={c.id}>
+                            <td>{c.id}</td>
+                            <td>{c.name}</td>
+                            <td>${c.price}</td>
+                            <td>
+                              {isBidding ? (
+                                <div className="d-flex gap-2">
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm w-50"
+                                    placeholder="Bid"
+                                    value={userBids[c.id] || ''}
+                                    onChange={(e) =>
+                                      setUserBids((prev) => ({
+                                        ...prev,
+                                        [c.id]: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <button
+                                    className="btn btn-sm btn-primary"
+                                    onClick={() =>
+                                      placeUserBid(
+                                        selectedEvent.id,
+                                        selectedSubEvent.id,
+                                        c.id,
+                                        userBids[c.id]
+                                      )
+                                    }
+                                  >
+                                    Bid
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  className={`btn btn-sm ${
+                                    already
+                                      ? 'btn-outline-danger disabled'
+                                      : 'btn-success'
+                                  }`}
+                                  onClick={() => handleSelectContestant(c)}
+                                >
+                                  {already ? 'Unavailable' : 'Buy'}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
