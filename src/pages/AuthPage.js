@@ -148,7 +148,7 @@ export default function AuthPage() {
     <div style={styles.container}>
       <header style={styles.header}>
         <img
-          src="/assets/images/logo.png"
+          src="/assets/logo.png"
           alt="Calcutta Logo"
           style={styles.logo}
         />
