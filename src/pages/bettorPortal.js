@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { apiFetch } from '../api';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function BettingPortal() {
   const navigate = useNavigate();
