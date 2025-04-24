@@ -148,7 +148,7 @@ export default function AuthPage() {
     <div style={styles.container}>
       <header style={styles.header}>
         <img
-          src="https://via.placeholder.com/80"
+          src="/assets/images/logo.png"
           alt="Calcutta Logo"
           style={styles.logo}
         />
