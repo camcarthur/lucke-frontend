@@ -4,11 +4,11 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const colors = {
-  primaryStart: '#FF6F61',
-  primaryEnd: '#3F51B5',
-  buttonColor: '#3F51B5',
-  accent: '#000',
-  rodeoAccent: '#3F51B5',
+  primaryStart: '#cc5500',       // Burnt Orange
+  primaryEnd: '#ff8800',         // Vivid Orange
+  buttonColor: '#cc5500',        // Match button to burnt orange
+  accent: '#cc5500',             // Accent color
+  rodeoAccent: '#cc5500',        // For border bottom on toggle
   white: '#fff',
   grayLight: '#ddd',
   grayDark: '#555',
