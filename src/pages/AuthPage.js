@@ -6,9 +6,9 @@ import { useNavigate } from 'react-router-dom';
 const colors = {
   primaryStart: '#1a1a1a',       // Very dark gray (almost black)
   primaryEnd: '#2e2e2e',         // Slightly lighter dark gray
-  buttonColor: '#1f4d3b',        // Burnt orange (for contrast)
-  accent: '#1f4d3b',
-  rodeoAccent: '#1f4d3b',
+  buttonColor: '#4d7c53',        // Burnt orange (for contrast)
+  accent: '#4d7c53',
+  rodeoAccent: '#4d7c53',
   white: '#fff',
   grayLight: '#ddd',
   grayDark: '#555',
