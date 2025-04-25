@@ -45,11 +45,11 @@ function AdminPortal() {
     setMainContestants(arr);
   }, [mainContestantCount]);
 
-  // function handleMainContestantChange(index, field, value) {
-  //   const updated = [...mainContestants];
-  //   updated[index][field] = field === 'price' ? Number(value) : value;
-  //   setMainContestants(updated);
-  // }
+  function handleMainContestantChange(index, field, value) {
+    const updated = [...mainContestants];
+    updated[index][field] = field === 'price' ? Number(value) : value;
+    setMainContestants(updated);
+  }
 
   function handleAddSubEvent() {
     const newSubEvent = {
@@ -259,7 +259,7 @@ function AdminPortal() {
                   } w-100 mt-2`}
                   disabled={subEvents.length === 0}
                 >
-                  Createe Event
+                  Create Event
                 </button>
               </div>
             </div>
