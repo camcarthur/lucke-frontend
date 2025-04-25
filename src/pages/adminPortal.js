@@ -176,6 +176,50 @@ function AdminPortal() {
     }
   }
 
+  async function handleSaveEdits(eventId) {
+    const eventToEdit = events.find(e => e.id === eventId);
+    if (!eventToEdit) return;
+  
+    try {
+      const res = await apiFetch(`/api/events/${eventId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventToEdit),
+      });
+      const data = await res.json();
+      console.log('Event updated:', data);
+      fetchEvents();
+    } catch (error) {
+      console.error('[handleSaveEdits]', error);
+    }
+  } 
+  
+  async function handleEditSubEventName(eventId, subId, newName) {
+    try {
+      await apiFetch(`/api/events/${eventId}/sub-events/${subId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+      });
+      fetchEvents();
+    } catch (err) {
+      console.error('[handleEditSubEventName]', err);
+    }
+  }
+  
+  async function handleEditContestant(eventId, subId, contestantId, field, value) {
+    try {
+      await apiFetch(`/api/events/${eventId}/sub-events/${subId}/contestants/${contestantId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: field === 'price' ? Number(value) : value })
+      });
+      fetchEvents();
+    } catch (err) {
+      console.error('[handleEditContestant]', err);
+    }
+  }  
+
   return (
     <div className="container pt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -348,12 +392,28 @@ function AdminPortal() {
               <h6>Main Contestants</h6>
               {ev.contestants.map((c) => (
                 <div key={c.id} className="d-flex justify-content-between align-items-center mb-2">
-                  <span>
-                    {c.name} — ${c.price}
-                    {ev.winningContestant === c.id && (
-                      <Trophy size={16} strokeWidth={1.5} className="ms-2 text-warning" aria-label="Winner" />
-                    )}
-                  </span>
+                  <div className="d-flex flex-column flex-sm-row align-items-sm-center gap-2 w-100">
+                    <input
+                      type="text"
+                      defaultValue={c.name}
+                      className="form-control form-control-sm"
+                      disabled={sub.status !== 'open'}
+                      onBlur={(e) =>
+                        handleEditContestant(ev.id, sub.id, c.id, 'name', e.target.value)
+                      }
+                    />
+                    <input
+                      type="number"
+                      defaultValue={c.price}
+                      className="form-control form-control-sm"
+                      min="0"
+                      disabled={sub.status !== 'open'}
+                      onBlur={(e) =>
+                        handleEditContestant(ev.id, sub.id, c.id, 'price', e.target.value)
+                      }
+                    />
+                  </div>
+
                   {ev.status === 'open' && (
                     <button
                       className="btn btn-sm btn-outline-success"
@@ -370,7 +430,12 @@ function AdminPortal() {
                   <h6 className="mt-3">Sub Events</h6>
                   {ev.subEvents.map((sub) => (
                     <div key={sub.id} className="mb-3 border p-2">
-                      <strong>{sub.name} ({sub.status})</strong>
+                      <input
+                        className="form-control form-control-sm mb-2"
+                        defaultValue={sub.name}
+                        disabled={sub.status !== 'open'}
+                        onBlur={(e) => handleEditSubEventName(ev.id, sub.id, e.target.value)}
+                      />
                       {sub.contestants?.map((c) => (
                         <div key={c.id} className="d-flex justify-content-between align-items-center mt-1">
                           <span>
@@ -400,6 +465,14 @@ function AdminPortal() {
                     </div>
                   ))}
                 </>
+              )}
+              {ev.status === 'open' && (
+                <button
+                  className="btn btn-warning mt-2 me-2"
+                  onClick={() => handleSaveEdits(ev.id)}
+                >
+                  Save Changes
+                </button>
               )}
 
               {ev.status === 'open' && (
