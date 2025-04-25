@@ -6,6 +6,7 @@ import AdminPortal from './pages/adminPortal';
 import BettingPortal from './pages/bettorPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import Withdraw from './pages/Withdraw'; // ✅ Step 1: Import Withdraw page
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/withdraw" element={<Withdraw />} /> {/* ✅ Step 2: New Route */}
       </Routes>
     </Router>
   );
