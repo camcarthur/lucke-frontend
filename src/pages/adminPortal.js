@@ -219,7 +219,7 @@ function AdminPortal() {
             {hasSubEvents ? (
               <div>
                 <h4>Sub Events</h4>
-                <button type="button" className="btn btn-secondary mb-3" onClick={handleAddSubEvent}>
+                <button type="button" className="btn btn-success mb-3" onClick={handleAddSubEvent}>
                   Add Sub Event
                 </button>
                 {subEvents.map((subEvent, subIndex) => (
