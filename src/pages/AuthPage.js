@@ -29,8 +29,8 @@ const styles = {
     marginBottom: 20,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 120,
+    height: 120,
     marginBottom: 10,
   },
   title: {
