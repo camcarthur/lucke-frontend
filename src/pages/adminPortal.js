@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { Trophy } from 'lucide-react';
 
+console.log('🛠️ AdminPortal.js loaded —', new Date().toLocaleTimeString());
+
 const colors = {
   primaryStart: '#1a1a1a',
   primaryEnd: '#2e2e2e',
