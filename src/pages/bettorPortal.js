@@ -168,12 +168,19 @@ export default function BettingPortal() {
                 </button>
               )}
               <button
+                className="btn btn-sm btn-outline-info me-2"
+                onClick={() => navigate('/withdraw')}
+              >
+                Withdraw
+              </button>
+              <button
                 className="btn btn-sm btn-outline-secondary"
                 onClick={handleLogout}
               >
                 Logout
               </button>
             </div>
+
             <div className="text-muted small mt-1">
               {auth.user.username} | Balance: ${userBalance.toFixed(2)}
             </div>
