@@ -397,7 +397,7 @@ function AdminPortal() {
                       type="text"
                       defaultValue={c.name}
                       className="form-control form-control-sm"
-                      disabled={sub.status !== 'open'}
+                      disabled={ev.status !== 'open'}
                       onBlur={(e) =>
                         handleEditContestant(ev.id, sub.id, c.id, 'name', e.target.value)
                       }
