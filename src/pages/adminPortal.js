@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { Trophy } from 'lucide-react';
 
-console.log('🛠️ AdminPortal.js loaded —', new Date().toLocaleTimeString());
-
 const colors = {
   primaryStart: '#1a1a1a',
   primaryEnd: '#2e2e2e',
@@ -15,10 +13,12 @@ const colors = {
 
 const styles = {
   page: {
-    minHeight: '100vh',
+    height: '100vh',
     background: `linear-gradient(135deg, ${colors.primaryStart} 0%, ${colors.primaryEnd} 100%)`,
+    backgroundAttachment: 'fixed',
     padding: '2rem',
     fontFamily: `Segoe UI, Tahoma, Geneva, Verdana, sans-serif`,
+    overflowY: 'auto',
   },
   header: {
     display: 'flex',
@@ -36,11 +36,7 @@ const styles = {
     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
   },
   sectionTitle: {
-    color: '#fff',
-    marginBottom: '1rem',
-  },
-  subsectionTitle: {
-    color: '#fff',
+    color: colors.white,
     margin: '2rem 0 1rem',
   },
   createButton: {
@@ -55,22 +51,23 @@ export default function AdminPortal() {
   const [eventName, setEventName] = useState('');
   const [subEvents, setSubEvents] = useState([]);
 
+  // load events
   useEffect(() => {
     fetchEvents();
   }, []);
-
   async function fetchEvents() {
     const res = await apiFetch('/api/events');
-    const data = await res.json();
-    setEvents(data);
+    setEvents(await res.json());
   }
 
+  // start new-event mode
   function handleNewEventClick() {
     setIsCreating(true);
     setEventName('');
     setSubEvents([]);
   }
 
+  // sub-event helpers
   function handleAddSubEvent() {
     setSubEvents([
       ...subEvents,
@@ -83,34 +80,34 @@ export default function AdminPortal() {
       },
     ]);
   }
-
-  function updateSub(index, changes) {
+  function updateSub(i, changes) {
     const copy = [...subEvents];
-    copy[index] = { ...copy[index], ...changes };
+    copy[i] = { ...copy[i], ...changes };
+    setSubEvents(copy);
+  }
+  function handleSubEventNameChange(i, v) {
+    updateSub(i, { name: v });
+  }
+  function handleSubEventGameTypeChange(i, v) {
+    updateSub(i, { gameType: v });
+  }
+  function handleSubEventContestantCountChange(i, cnt) {
+    updateSub(i, {
+      contestantCount: cnt,
+      contestants: Array.from({ length: cnt }, (_, j) => ({
+        id: j + 1,
+        name: '',
+        price: 0,
+      })),
+    });
+  }
+  function handleSubEventContestantChange(si, ci, f, v) {
+    const copy = [...subEvents];
+    copy[si].contestants[ci][f] = f === 'price' ? Number(v) : v;
     setSubEvents(copy);
   }
 
-  function handleSubEventNameChange(i, val) {
-    updateSub(i, { name: val });
-  }
-  function handleSubEventGameTypeChange(i, val) {
-    updateSub(i, { gameType: val });
-  }
-  function handleSubEventContestantCountChange(i, count) {
-    const contestants = Array.from({ length: count }, (_, j) => ({
-      id: j + 1,
-      name: '',
-      price: 0,
-    }));
-    updateSub(i, { contestantCount: count, contestants });
-  }
-  function handleSubEventContestantChange(si, ci, field, val) {
-    const copy = [...subEvents];
-    copy[si].contestants[ci][field] =
-      field === 'price' ? Number(val) : val;
-    setSubEvents(copy);
-  }
-
+  // create event
   async function handleCreateEvent(e) {
     e.preventDefault();
     await apiFetch('/api/events', {
@@ -126,10 +123,13 @@ export default function AdminPortal() {
     fetchEvents();
   }
 
+  // actions: close, declare winner
   async function handleClose(evId) {
     const res = await apiFetch(`/api/events/${evId}/close`, { method: 'POST' });
-    const data = await res.json();
-    if (!res.ok) alert(`Error: ${data.error}`);
+    if (!res.ok) {
+      const { error } = await res.json();
+      alert(`Error closing: ${error}`);
+    }
     fetchEvents();
   }
   async function handleDeclareWinner(evId, cid) {
@@ -141,14 +141,11 @@ export default function AdminPortal() {
     fetchEvents();
   }
   async function handleDeclareSubWinner(evId, sid, cid) {
-    await apiFetch(
-      `/api/events/${evId}/sub-events/${sid}/winner`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contestantId: cid }),
-      }
-    );
+    await apiFetch(`/api/events/${evId}/sub-events/${sid}/winner`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contestantId: cid }),
+    });
     fetchEvents();
   }
   async function handleCloseSubEvent(evId, sid) {
@@ -158,7 +155,7 @@ export default function AdminPortal() {
     fetchEvents();
   }
 
-  // split into active vs closed
+  // split lists
   const active = events.filter((e) => e.status === 'open');
   const closed = events.filter((e) => e.status === 'closed');
 
@@ -189,7 +186,6 @@ export default function AdminPortal() {
             <div className="mb-3">
               <label>Event Name:</label>
               <input
-                type="text"
                 className="form-control"
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
@@ -198,16 +194,15 @@ export default function AdminPortal() {
             </div>
 
             <h4 style={styles.sectionTitle}>Sub-Events</h4>
-            {subEvents.map((sub, idx) => (
+            {subEvents.map((sub, i) => (
               <div key={sub.id} className="border p-3 mb-3">
                 <div className="mb-2">
                   <label>Name:</label>
                   <input
-                    type="text"
                     className="form-control"
                     value={sub.name}
                     onChange={(e) =>
-                      handleSubEventNameChange(idx, e.target.value)
+                      handleSubEventNameChange(i, e.target.value)
                     }
                     required
                   />
@@ -221,7 +216,7 @@ export default function AdminPortal() {
                     value={sub.contestantCount}
                     onChange={(e) =>
                       handleSubEventContestantCountChange(
-                        idx,
+                        i,
                         Number(e.target.value)
                       )
                     }
@@ -233,7 +228,7 @@ export default function AdminPortal() {
                     className="form-control"
                     value={sub.gameType}
                     onChange={(e) =>
-                      handleSubEventGameTypeChange(idx, e.target.value)
+                      handleSubEventGameTypeChange(i, e.target.value)
                     }
                   >
                     <option value="default">Default</option>
@@ -243,17 +238,16 @@ export default function AdminPortal() {
                     <option value="bidding">Bidding</option>
                   </select>
                 </div>
-                {sub.contestants.map((c, cIdx) => (
+                {sub.contestants.map((c, ci) => (
                   <div key={c.id} className="mb-2 ps-3">
                     <label>Contestant #{c.id} Name</label>
                     <input
-                      type="text"
                       className="form-control mb-1"
                       value={c.name}
                       onChange={(e) =>
                         handleSubEventContestantChange(
-                          idx,
-                          cIdx,
+                          i,
+                          ci,
                           'name',
                           e.target.value
                         )
@@ -270,8 +264,8 @@ export default function AdminPortal() {
                       value={c.price}
                       onChange={(e) =>
                         handleSubEventContestantChange(
-                          idx,
-                          cIdx,
+                          i,
+                          ci,
                           'price',
                           e.target.value
                         )
@@ -289,7 +283,7 @@ export default function AdminPortal() {
                 className="btn btn-primary mb-2"
                 onClick={handleAddSubEvent}
               >
-                Add Sub‐Event
+                Add Sub-Event
               </button>
               <button
                 type="submit"
@@ -305,20 +299,16 @@ export default function AdminPortal() {
         </div>
       )}
 
-      <hr style={{ borderColor: colors.white }} />
-
-      <h2 style={styles.subsectionTitle}>Active Events</h2>
-      <div className="accordion" id="activeEventsAccordion">
+      <h2 style={styles.sectionTitle}>Active Events</h2>
+      <div className="accordion" id="activeAccordion">
         {active.map((ev) => (
           <div style={styles.card} key={ev.id}>
-            {/* ...same card-body as before... */}
             <div className="card-header">
               <h5>
-                Event #{ev.id} — {ev.name} ({ev.status})
+                Event #{ev.id} — {ev.name} (open)
               </h5>
             </div>
             <div className="card-body">
-              {/* main contestants */}
               <h6>Main Contestants</h6>
               {ev.contestants.map((c) => (
                 <div
@@ -344,10 +334,9 @@ export default function AdminPortal() {
                 </div>
               ))}
 
-              {/* sub-events */}
               {ev.subEvents?.length > 0 && (
                 <>
-                  <h6 className="mt-3">Sub‐Events</h6>
+                  <h6 className="mt-3">Sub-Events</h6>
                   {ev.subEvents.map((sub) => (
                     <div key={sub.id} className="mb-3 border p-2">
                       <strong>
@@ -382,7 +371,7 @@ export default function AdminPortal() {
                         className="btn btn-danger btn-sm mt-2"
                         onClick={() => handleCloseSubEvent(ev.id, sub.id)}
                       >
-                        Close Sub‐Event
+                        Close Sub-Event
                       </button>
                     </div>
                   ))}
@@ -400,8 +389,8 @@ export default function AdminPortal() {
         ))}
       </div>
 
-      <h2 style={styles.subsectionTitle}>Closed Events</h2>
-      <div className="accordion" id="closedEventsAccordion">
+      <h2 style={styles.sectionTitle}>Closed Events</h2>
+      <div className="accordion" id="closedAccordion">
         {closed.map((ev) => (
           <div style={styles.card} key={ev.id}>
             <div className="card-header">
