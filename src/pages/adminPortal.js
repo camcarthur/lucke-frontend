@@ -45,11 +45,11 @@ function AdminPortal() {
     setMainContestants(arr);
   }, [mainContestantCount]);
 
-  function handleMainContestantChange(index, field, value) {
-    const updated = [...mainContestants];
-    updated[index][field] = field === 'price' ? Number(value) : value;
-    setMainContestants(updated);
-  }
+  // function handleMainContestantChange(index, field, value) {
+  //   const updated = [...mainContestants];
+  //   updated[index][field] = field === 'price' ? Number(value) : value;
+  //   setMainContestants(updated);
+  // }
 
   function handleAddSubEvent() {
     const newSubEvent = {
