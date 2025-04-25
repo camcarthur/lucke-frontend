@@ -4,9 +4,9 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const colors = {
-  primaryStart: '#4b1e0d',      // Deep burnt orange (almost brown)
-  primaryEnd: '#7a2e10',        // Rich, dark orange
-  buttonColor: '#cc5500',       // Burnt orange for CTA
+  primaryStart: '#1a1a1a',       // Very dark gray (almost black)
+  primaryEnd: '#2e2e2e',         // Slightly lighter dark gray
+  buttonColor: '#cc5500',        // Burnt orange (for contrast)
   accent: '#cc5500',
   rodeoAccent: '#cc5500',
   white: '#fff',
