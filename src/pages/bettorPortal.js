@@ -10,8 +10,8 @@ export default function BettingPortal() {
   const { auth, logout } = useContext(AuthContext);
 
   // State
-  const [userBalance, setUserBalance] = useState(() =>
-    parseFloat(auth.user?.balance) || 0
+  const [userBalance, setUserBalance] = useState(
+    () => parseFloat(auth.user?.balance) || 0
   );
   const [events, setEvents] = useState([]);
   const [yourEvents, setYourEvents] = useState([]);
@@ -37,9 +37,10 @@ export default function BettingPortal() {
     try {
       const res = await apiFetch('/api/events', { credentials: 'include' });
       const data = await res.json();
-      setEvents(data);
+      setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setEvents([]);
     }
   }
 
@@ -54,7 +55,7 @@ export default function BettingPortal() {
       const updated = await res.json();
       setSelectedEvent(updated);
       if (selectedSubEvent) {
-        const newSub = updated.subEvents.find(
+        const newSub = updated.subEvents?.find(
           (se) => se.id === selectedSubEvent.id
         );
         setSelectedSubEvent(newSub);
@@ -94,17 +95,16 @@ export default function BettingPortal() {
     if (!selectedEvent || !selectedContestant || !userId) {
       return alert('Missing info: userId, event, or contestant');
     }
-    const body = {
-      userId,
-      contestantId: selectedContestant.id,
-      amount: selectedContestant.price,
-      ...(selectedSubEvent && { subEventId: selectedSubEvent.id }),
-    };
     try {
       const res = await apiFetch(`/api/events/${selectedEvent.id}/bets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          userId,
+          contestantId: selectedContestant.id,
+          amount: selectedContestant.price,
+          ...(selectedSubEvent && { subEventId: selectedSubEvent.id }),
+        }),
       });
       const data = await res.json();
       if (data.error) alert(`Error: ${data.error}`);
@@ -151,11 +151,11 @@ export default function BettingPortal() {
   }
 
   // Derived for rendering
-  const contestants =
-    selectedEvent
-      ? (selectedSubEvent?.contestants ?? selectedEvent.contestants)
-      : [];
+  const contestants = selectedEvent
+    ? selectedSubEvent?.contestants ?? selectedEvent.contestants
+    : [];
   const subClosed = selectedSubEvent?.status !== 'open';
+  const safeEvents = Array.isArray(events) ? events : [];
 
   // Render
   return (
@@ -206,7 +206,8 @@ export default function BettingPortal() {
               {yourEvents.length ? (
                 yourEvents.map((ev) => (
                   <li key={ev.id} className="list-group-item">
-                    {ev.name} <small className="text-muted">#{ev.id}</small>
+                    {ev.name}{' '}
+                    <small className="text-muted">#{ev.id}</small>
                   </li>
                 ))
               ) : (
@@ -223,7 +224,7 @@ export default function BettingPortal() {
               <h5 className="mb-0">All Events</h5>
             </div>
             <ul className="list-group list-group-flush">
-              {events
+              {safeEvents
                 .filter((ev) => ev.status === 'open')
                 .map((ev) => (
                   <li
@@ -334,7 +335,6 @@ export default function BettingPortal() {
                     </thead>
                     <tbody>
                       {contestants.map((c) => {
-                        // If the sub-event is closed, show a single "Unavailable" button
                         if (subClosed) {
                           return (
                             <tr key={c.id}>
@@ -350,7 +350,6 @@ export default function BettingPortal() {
                           );
                         }
 
-                        // Otherwise use your existing bidding / buy logic
                         const isBidding =
                           selectedSubEvent?.gameType === 'bidding';
                         const fcfs =
@@ -421,7 +420,9 @@ export default function BettingPortal() {
                   <div className="border p-4 mt-4 rounded bg-light">
                     <h6>Mock Payment</h6>
                     <div className="mb-3">
-                      <label className="form-label">User ID (Name)</label>
+                      <label className="form-label">
+                        User ID (Name)
+                      </label>
                       <input
                         type="text"
                         className="form-control"
@@ -429,7 +430,10 @@ export default function BettingPortal() {
                         onChange={(e) => setUserId(e.target.value)}
                       />
                     </div>
-                    <button className="btn btn-primary" onClick={handlePay}>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handlePay}
+                    >
                       Pay ${selectedContestant.price}
                     </button>
                   </div>
