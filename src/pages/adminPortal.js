@@ -287,17 +287,17 @@ export default function AdminPortal() {
               </div>
             ))}
 
-            <div className='d-flex flex-column'>
+            <div className='d-grid gap-2'>
               <button
                 type='button'
-                className='btn btn-secondary mb-2'
+                className='btn btn-success mb-2'
                 onClick={handleAddSubEvent}
               >
                 Add Sub-Event
               </button>
               <button
                 type='submit'
-                className={`btn ${subEvents.length > 0 ? 'btn-success' : 'btn-secondary'} w-100 mt-2`}
+                className={`btn ${subEvents.length > 0 ? 'btn-success' : 'btn-secondary'}`}
                 disabled={subEvents.length === 0}
               >
                 Create Event
