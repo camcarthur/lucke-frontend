@@ -238,6 +238,12 @@ export default function BettingPortal() {
               ))}
             </ul>
           </div>
+          <button
+            className="btn btn-outline-secondary w-100"
+            onClick={() => navigate('/archive')}
+          >
+          View Archives
+          </button>
         </aside>
 
         {/* Main Panel */}
