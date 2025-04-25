@@ -10,8 +10,9 @@ function AuthProvider({ children }) {
   // Check session on mount
   const checkSession = async () => {
     try {
-      const res = await apiFetch( {
-        credentials: 'include'
+      const res = await apiFetch(
+        '/auth/current-user',
+        { credentials: 'include' 
       });
       if (!res.ok) {
         setAuth({ isLoggedIn: false, role: '', user: null, loading: false });
