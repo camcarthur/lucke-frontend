@@ -4,6 +4,44 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { Trophy } from 'lucide-react';
 
+const colors = {
+  primaryStart: '#1a1a1a',
+  primaryEnd: '#2e2e2e',
+  rodeoAccent: '#198754',
+  white: '#ffffff',
+};
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: `linear-gradient(135deg, ${colors.primaryStart} 0%, ${colors.primaryEnd} 100%)`,
+    padding: '2rem',
+    fontFamily: `Segoe UI, Tahoma, Geneva, Verdana, sans-serif`,
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1.5rem',
+    color: colors.white,
+  },
+  card: {
+    background: colors.white,
+    borderRadius: '0.5rem',
+    border: `1px solid ${colors.rodeoAccent}`,
+    padding: '1rem',
+    marginBottom: '1rem',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+  },
+  sectionTitle: {
+    color: '#333',
+    marginBottom: '1rem',
+  },
+  createButton: {
+    marginBottom: '1rem',
+  },
+};
+
 function AdminPortal() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
@@ -57,39 +95,38 @@ function AdminPortal() {
       name: '',
       contestantCount: 1,
       gameType: 'default',
-      contestants: [{ id: 1, name: '', price: 0 }]
+      contestants: [{ id: 1, name: '', price: 0 }],
     };
     setSubEvents([...subEvents, newSubEvent]);
   }
 
+  function updateSub(index, changes) {
+    const copy = [...subEvents];
+    copy[index] = { ...copy[index], ...changes };
+    setSubEvents(copy);
+  }
+
   function handleSubEventNameChange(index, value) {
-    const updated = [...subEvents];
-    updated[index].name = value;
-    setSubEvents(updated);
+    updateSub(index, { name: value });
   }
 
   function handleSubEventGameTypeChange(index, value) {
-    const updated = [...subEvents];
-    updated[index].gameType = value;
-    setSubEvents(updated);
+    updateSub(index, { gameType: value });
   }
 
   function handleSubEventContestantCountChange(index, value) {
-    const updated = [...subEvents];
-    updated[index].contestantCount = value;
-    const arr = [];
-    for (let i = 0; i < value; i++) {
-      arr.push({ id: i + 1, name: '', price: 0 });
+    const contestants = [];
+    for (let i = 1; i <= value; i++) {
+      contestants.push({ id: i, name: '', price: 0 });
     }
-    updated[index].contestants = arr;
-    setSubEvents(updated);
+    updateSub(index, { contestantCount: value, contestants });
   }
 
   function handleSubEventContestantChange(subIndex, contestantIndex, field, value) {
-    const updated = [...subEvents];
-    updated[subIndex].contestants[contestantIndex][field] =
+    const copy = [...subEvents];
+    copy[subIndex].contestants[contestantIndex][field] =
       field === 'price' ? Number(value) : value;
-    setSubEvents(updated);
+    setSubEvents(copy);
   }
 
   async function handleCreateEvent(e) {
@@ -98,14 +135,13 @@ function AdminPortal() {
       const body = {
         name: eventName,
         contestants: hasSubEvents ? [] : mainContestants,
-        subEvents: hasSubEvents ? subEvents : []
+        subEvents: hasSubEvents ? subEvents : [],
       };
-      const res = await apiFetch('/api/events', {
+      await apiFetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
-      await res.json();
       setIsCreating(false);
       fetchEvents();
     } catch (error) {
@@ -115,85 +151,63 @@ function AdminPortal() {
 
   async function handleClose(eventId) {
     try {
-      const res = await apiFetch(`/api/events/${eventId}/close`, {
-        method: 'POST'
-      });
+      const res = await apiFetch(`/api/events/${eventId}/close`, { method: 'POST' });
       const data = await res.json();
-  
       if (!res.ok) {
-        console.error('❌ Error closing event:', data.error);
-        console.debug('🛠️ Debug info:', data.debug);  // <== This line is crucial
+        console.error(data);
         alert(`Error closing event: ${data.error}`);
         return;
       }
-  
-      console.log('✅ Event closed:', data.message);
-      console.debug('🛠️ Debug info:', data.debug);
-      fetchEvents();
-    } catch (error) {
-      console.error('[handleClose] Unexpected error:', error);
-      alert('Unexpected error closing event.');
-    }
-  }  
-
-  async function handleDeclareWinner(eventId, contestantId) {
-    try {
-      const res = await apiFetch(`/api/events/${eventId}/winner`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contestantId })
-      });
-      await res.json();
       fetchEvents();
     } catch (error) {
       console.error(error);
+      alert('Unexpected error closing event.');
     }
+  }
+
+  async function handleDeclareWinner(eventId, contestantId) {
+    await apiFetch(`/api/events/${eventId}/winner`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contestantId }),
+    });
+    fetchEvents();
   }
 
   async function handleDeclareSubWinner(eventId, subId, contestantId) {
-    try {
-      const res = await apiFetch(`/api/events/${eventId}/sub-events/${subId}/winner`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contestantId })
-      });
-      await res.json();
-      fetchEvents();
-    } catch (error) {
-      console.error(error);
-    }
+    await apiFetch(`/api/events/${eventId}/sub-events/${subId}/winner`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contestantId }),
+    });
+    fetchEvents();
   }
 
   async function handleCloseSubEvent(eventId, subId) {
-    try {
-      const res = await apiFetch(`/api/events/${eventId}/sub-events/${subId}/close`, {
-        method: 'POST'
-      });
-      await res.json();
-      fetchEvents();
-    } catch (error) {
-      console.error(error);
-    }
+    await apiFetch(`/api/events/${eventId}/sub-events/${subId}/close`, { method: 'POST' });
+    fetchEvents();
   }
 
   return (
-    <div className="container pt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div style={styles.page}>
+      <div style={styles.header}>
         <h1>Admin Portal</h1>
-        <div>
-          <button className="btn btn-primary" onClick={() => navigate('/betting')}>
-            To Homepage
-          </button>
-        </div>
+        <button className="btn btn-primary" onClick={() => navigate('/betting')}>
+          To Homepage
+        </button>
       </div>
 
-      <button className="btn btn-primary mb-3" onClick={handleNewEventClick}>
+      <button
+        style={styles.createButton}
+        className="btn btn-primary"
+        onClick={handleNewEventClick}
+      >
         New Event
       </button>
 
       {isCreating && (
-        <div className="card p-3 mb-4">
-          <h3>Create New Event</h3>
+        <div style={styles.card}>
+          <h3 style={styles.sectionTitle}>Create New Event</h3>
           <form onSubmit={handleCreateEvent}>
             <div className="mb-3">
               <label>Event Name:</label>
@@ -205,140 +219,104 @@ function AdminPortal() {
                 required
               />
             </div>
+
+            {/* Sub-Events Section */}
             <div className="mb-3">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={hasSubEvents}
-                  onChange={(e) => setHasSubEvents(e.target.checked)}
-                />{' '}
-                This event has sub events
-              </label>
-            </div>
-
-            {hasSubEvents ? (
-              <div>
-                <h4>Sub Events</h4>
-                <button type="button" className="btn btn-secondary mb-3" onClick={handleAddSubEvent}>
-                  Add Sub Event
-                </button>
-                {subEvents.map((subEvent, subIndex) => (
-                  <div key={subEvent.id} className="border p-3 mb-3">
-                    <div className="mb-3">
-                      <label>Sub Event Name:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={subEvent.name}
-                        onChange={(e) => handleSubEventNameChange(subIndex, e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label>How many contestants in this sub event?</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={subEvent.contestantCount}
-                        onChange={(e) =>
-                          handleSubEventContestantCountChange(subIndex, Number(e.target.value))
-                        }
-                        min="1"
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label>Game Type:</label>
-                      <select
-                        className="form-control"
-                        value={subEvent.gameType || 'default'}
-                        onChange={(e) => handleSubEventGameTypeChange(subIndex, e.target.value)}
-                      >
-                        <option value="default">Default</option>
-                        <option value="first-come-first-serve">First Come First Serve</option>
-                        <option value="bidding">Bidding</option>
-                      </select>
-                    </div>
-
-                    {subEvent.contestants.map((contestant, cIndex) => (
-                      <div key={contestant.id} className="mb-3">
-                        <label>Contestant #{contestant.id} Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={contestant.name}
-                          onChange={(e) =>
-                            handleSubEventContestantChange(subIndex, cIndex, 'name', e.target.value)
-                          }
-                          required
-                        />
-
-                        <label>
-                          {subEvent.gameType === 'bidding' ? 'Initial Bid Price' : 'Price'}
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={contestant.price}
-                          onChange={(e) =>
-                            handleSubEventContestantChange(subIndex, cIndex, 'price', e.target.value)
-                          }
-                          min="0"
-                          required
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div>
-                <h4>Main Event Contestants</h4>
-                <div className="mb-3">
-                  <label>How many contestants?</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={mainContestantCount}
-                    onChange={(e) => setMainContestantCount(Number(e.target.value))}
-                    min="1"
-                  />
-                </div>
-                {mainContestants.map((c, idx) => (
-                  <div className="mb-3" key={c.id}>
-                    <label>Contestant #{c.id} Name</label>
+              <h4 style={styles.sectionTitle}>Sub-Events</h4>
+              {subEvents.map((sub, idx) => (
+                <div key={sub.id} className="border p-3 mb-3">
+                  <div className="mb-2">
+                    <label>Name:</label>
                     <input
                       type="text"
                       className="form-control"
-                      value={c.name}
-                      onChange={(e) => handleMainContestantChange(idx, 'name', e.target.value)}
-                      required
-                    />
-                    <label>Contestant #{c.id} Price</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={c.price}
-                      onChange={(e) => handleMainContestantChange(idx, 'price', e.target.value)}
-                      min="0"
+                      value={sub.name}
+                      onChange={(e) => handleSubEventNameChange(idx, e.target.value)}
                       required
                     />
                   </div>
-                ))}
+                  <div className="mb-2">
+                    <label># Contestants:</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      min="1"
+                      value={sub.contestantCount}
+                      onChange={(e) =>
+                        handleSubEventContestantCountChange(idx, Number(e.target.value))
+                      }
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label>Game Type:</label>
+                    <select
+                      className="form-control"
+                      value={sub.gameType}
+                      onChange={(e) => handleSubEventGameTypeChange(idx, e.target.value)}
+                    >
+                      <option value="default">Default</option>
+                      <option value="first-come-first-serve">First Come First Serve</option>
+                      <option value="bidding">Bidding</option>
+                    </select>
+                  </div>
+                  {sub.contestants.map((c, cIdx) => (
+                    <div key={c.id} className="mb-2 ps-3">
+                      <label>Contestant #{c.id} Name</label>
+                      <input
+                        type="text"
+                        className="form-control mb-1"
+                        value={c.name}
+                        onChange={(e) =>
+                          handleSubEventContestantChange(idx, cIdx, 'name', e.target.value)
+                        }
+                        required
+                      />
+                      <label>{sub.gameType === 'bidding' ? 'Starting Bid' : 'Price'}</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        min="0"
+                        value={c.price}
+                        onChange={(e) =>
+                          handleSubEventContestantChange(idx, cIdx, 'price', e.target.value)
+                        }
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+
+              {/* Add + Create grouped */}
+              <div className="d-flex flex-column">
+                <button
+                  type="button"
+                  className="btn btn-primary mb-2"
+                  onClick={handleAddSubEvent}
+                >
+                  Add Sub-Event
+                </button>
+                <button
+                  type="submit"
+                  className={`btn ${
+                    subEvents.length > 0 ? 'btn-success' : 'btn-secondary'
+                  } w-100 mt-2`}
+                  disabled={subEvents.length === 0}
+                >
+                  Create Event
+                </button>
               </div>
-            )}
-            <button type="submit" className="btn btn-success">
-              Create Event
-            </button>
+            </div>
           </form>
         </div>
       )}
 
-      <hr />
+      <hr style={{ borderColor: colors.white }} />
 
-      <h2>All Events</h2>
+      <h2 style={{ ...styles.sectionTitle, color: colors.white }}>All Events</h2>
       <div className="accordion" id="eventsAccordion">
         {events.map((ev) => (
-          <div className="card mb-3" key={ev.id}>
+          <div style={styles.card} key={ev.id}>
             <div className="card-header">
               <h5>
                 Event #{ev.id} — {ev.name} ({ev.status})
@@ -347,11 +325,14 @@ function AdminPortal() {
             <div className="card-body">
               <h6>Main Contestants</h6>
               {ev.contestants.map((c) => (
-                <div key={c.id} className="d-flex justify-content-between align-items-center mb-2">
+                <div
+                  key={c.id}
+                  className="d-flex justify-content-between align-items-center mb-2"
+                >
                   <span>
                     {c.name} — ${c.price}
                     {ev.winningContestant === c.id && (
-                      <Trophy size={16} strokeWidth={1.5} className="ms-2 text-warning" aria-label="Winner" />
+                      <Trophy size={16} strokeWidth={1.5} className="ms-2 text-warning" />
                     )}
                   </span>
                   {ev.status === 'open' && (
@@ -367,16 +348,21 @@ function AdminPortal() {
 
               {ev.subEvents?.length > 0 && (
                 <>
-                  <h6 className="mt-3">Sub Events</h6>
+                  <h6 className="mt-3">Sub-Events</h6>
                   {ev.subEvents.map((sub) => (
                     <div key={sub.id} className="mb-3 border p-2">
-                      <strong>{sub.name} ({sub.status})</strong>
-                      {sub.contestants?.map((c) => (
-                        <div key={c.id} className="d-flex justify-content-between align-items-center mt-1">
+                      <strong>
+                        {sub.name} ({sub.status})
+                      </strong>
+                      {sub.contestants.map((c) => (
+                        <div
+                          key={c.id}
+                          className="d-flex justify-content-between align-items-center mt-1"
+                        >
                           <span>
                             {c.name} — ${c.price}
                             {sub.winningContestant === c.id && (
-                              <Trophy size={14} strokeWidth={1.4} className="ms-2 text-warning" aria-label="Winner" />
+                              <Trophy size={14} strokeWidth={1.4} className="ms-2 text-warning" />
                             )}
                           </span>
                           {sub.status === 'open' && (
