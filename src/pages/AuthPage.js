@@ -4,11 +4,11 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const colors = {
-  primaryStart: '#FF6F61',
-  primaryEnd: '#3F51B5',
-  buttonColor: '#3F51B5',
-  accent: '#000',
-  rodeoAccent: '#3F51B5',
+  primaryStart: '#1a1a1a',       // Very dark gray (almost black)
+  primaryEnd: '#2e2e2e',         // Slightly lighter dark gray
+  buttonColor: '#198754',        // Burnt orange (for contrast)
+  accent: '#198754',
+  rodeoAccent: '#198754',
   white: '#fff',
   grayLight: '#ddd',
   grayDark: '#555',
@@ -29,8 +29,8 @@ const styles = {
     marginBottom: 20,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 120,
+    height: 120,
     marginBottom: 10,
   },
   title: {
