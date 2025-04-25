@@ -259,7 +259,7 @@ function AdminPortal() {
                   } w-100 mt-2`}
                   disabled={subEvents.length === 0}
                 >
-                  Createe Event
+                  Create Event
                 </button>
               </div>
             </div>
