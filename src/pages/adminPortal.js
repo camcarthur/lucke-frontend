@@ -180,9 +180,14 @@ function AdminPortal() {
     <div className="container pt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Admin Portal</h1>
-        <button className="btn btn-primary" onClick={() => navigate('/betting')}>
-          To Homepage
-        </button>
+        <div>
+          <button className="btn btn-secondary me-2" onClick={() => navigate('/withdraw')}>
+            Withdraw
+          </button>
+          <button className="btn btn-primary" onClick={() => navigate('/betting')}>
+            To Homepage
+          </button>
+        </div>
       </div>
 
       <button className="btn btn-primary mb-3" onClick={handleNewEventClick}>
