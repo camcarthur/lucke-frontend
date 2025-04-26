@@ -1,25 +1,38 @@
 // src/pages/Archive.js
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const colors = {
   primaryStart: '#1a1a1a',
-  primaryEnd: '#2e2e2e',
-  text:       '#ddd',
-  cardBg:     '#2e2e2e',
-  badgeBg:    '#c0392b',
-  badgeText:  '#fff',
+  primaryEnd:   '#2e2e2e',
+  text:         '#ddd',
+  cardBg:       '#2e2e2e',
+  badgeBg:      '#c0392b',
+  badgeText:    '#fff',
 };
 
 const styles = {
   container: {
+    position: 'relative',      // for back button
     minHeight: '100vh',
     paddingTop: '3rem',
     paddingBottom: '3rem',
     background: `linear-gradient(135deg, ${colors.primaryStart} 0%, ${colors.primaryEnd} 100%)`,
     color: colors.text,
     fontFamily: `Segoe UI, Tahoma, Geneva, Verdana, sans-serif`,
+  },
+  backBtn: {
+    position: 'absolute',
+    top: '1rem',
+    right: '1rem',
+    background: 'transparent',
+    border: '1px solid #555',
+    borderRadius: '0.25rem',
+    color: colors.text,
+    padding: '0.25rem 0.5rem',
+    cursor: 'pointer',
   },
   header: {
     textAlign: 'center',
@@ -70,6 +83,7 @@ const styles = {
 };
 
 export default function Archive() {
+  const navigate = useNavigate();
   const [archived, setArchived] = useState([]);
 
   useEffect(() => {
@@ -83,6 +97,13 @@ export default function Archive() {
 
   return (
     <div style={styles.container}>
+      <button
+        style={styles.backBtn}
+        onClick={() => navigate('/betting')}
+      >
+        ← Back
+      </button>
+
       <h1 style={styles.header}>Archived Events</h1>
 
       {archived.length > 0 ? (
