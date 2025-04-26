@@ -1,5 +1,6 @@
 // src/pages/Withdraw.js
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const colors = {
   primaryStart: '#1a1a1a',
@@ -10,6 +11,7 @@ const colors = {
 
 const styles = {
   container: {
+    position: 'relative',         // for absolute-button placement
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
@@ -20,6 +22,17 @@ const styles = {
     fontFamily: `Segoe UI, Tahoma, Geneva, Verdana, sans-serif`,
     color: colors.text,
     textAlign: 'center',
+  },
+  backBtn: {
+    position: 'absolute',
+    top: '1rem',
+    right: '1rem',
+    background: 'transparent',
+    border: '1px solid #555',
+    borderRadius: '0.25rem',
+    color: colors.text,
+    padding: '0.25rem 0.5rem',
+    cursor: 'pointer',
   },
   title: {
     fontSize: '2.5rem',
@@ -33,8 +46,17 @@ const styles = {
 };
 
 export default function Withdraw() {
+  const navigate = useNavigate();
+
   return (
     <div style={styles.container}>
+      <button
+        style={styles.backBtn}
+        onClick={() => navigate('/betting')}
+      >
+        ← Back
+      </button>
+
       <h1 style={styles.title}>💸 Withdrawal</h1>
       <p style={styles.subtitle}>Withdrawal feature coming soon!</p>
     </div>
