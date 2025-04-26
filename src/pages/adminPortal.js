@@ -13,6 +13,9 @@ function AdminPortal() {
   const [mainContestantCount, setMainContestantCount] = useState(1);
   const [mainContestants, setMainContestants] = useState([]);
   const [subEvents, setSubEvents] = useState([]);
+  const [editingEventId, setEditingEventId] = useState(null);
+  const [editEventData, setEditEventData] = useState(null);
+
 
   useEffect(() => {
     fetchEvents();
@@ -91,6 +94,43 @@ function AdminPortal() {
       field === 'price' ? Number(value) : value;
     setSubEvents(updated);
   }
+
+  function handleEditClick(event) {
+    setEditingEventId(event.id);
+    setEditEventData({
+      name: event.name,
+      subEvents: event.subEvents.map(se => ({
+        id: se.id,
+        name: se.name,
+        contestants: se.contestants.map(c => ({
+          id: c.id,
+          name: c.name,
+          price: c.price
+        }))
+      }))
+    });
+  }
+  
+  function handleEditChange(field, value) {
+    setEditEventData(prev => ({ ...prev, [field]: value }));
+  }
+  
+  function handleEditSubEventChange(subIndex, field, value) {
+    const updated = [...editEventData.subEvents];
+    updated[subIndex][field] = value;
+    setEditEventData(prev => ({ ...prev, subEvents: updated }));
+  }
+  
+  function handleEditContestantChange(subIndex, contestantIndex, field, value) {
+    const updated = [...editEventData.subEvents];
+    updated[subIndex].contestants[contestantIndex][field] = field === 'price' ? Number(value) : value;
+    setEditEventData(prev => ({ ...prev, subEvents: updated }));
+  }
+
+  function handleCancelEdit() {
+    setEditingEventId(null);
+    setEditEventData(null);
+  }  
 
   async function handleCreateEvent(e) {
     e.preventDefault();
@@ -175,6 +215,23 @@ function AdminPortal() {
       console.error(error);
     }
   }
+
+  async function handleSaveEdit(eventId) {
+    try {
+      const res = await apiFetch(`/api/events/${eventId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editEventData)
+      });
+      await res.json();
+      setEditingEventId(null);
+      setEditEventData(null);
+      fetchEvents();
+    } catch (error) {
+      console.error(error);
+      alert('Error saving event edits.');
+    }
+  }  
 
   return (
     <div className="container pt-4">
@@ -345,67 +402,130 @@ function AdminPortal() {
               </h5>
             </div>
             <div className="card-body">
-              <h6>Main Contestants</h6>
-              {ev.contestants.map((c) => (
-                <div key={c.id} className="d-flex justify-content-between align-items-center mb-2">
-                  <span>
-                    {c.name} — ${c.price}
-                    {ev.winningContestant === c.id && (
-                      <Trophy size={16} strokeWidth={1.5} className="ms-2 text-warning" aria-label="Winner" />
-                    )}
-                  </span>
-                  {ev.status === 'open' && (
-                    <button
-                      className="btn btn-sm btn-outline-success"
-                      onClick={() => handleDeclareWinner(ev.id, c.id)}
-                    >
-                      Set Winner
-                    </button>
-                  )}
-                </div>
-              ))}
+              {editingEventId === ev.id ? (
+                <div>
+                  <div className="mb-3">
+                    <label>Edit Event Name:</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editEventData.name}
+                      onChange={(e) => handleEditChange('name', e.target.value)}
+                    />
+                  </div>
 
-              {ev.subEvents?.length > 0 && (
-                <>
-                  <h6 className="mt-3">Sub Events</h6>
-                  {ev.subEvents.map((sub) => (
-                    <div key={sub.id} className="mb-3 border p-2">
-                      <strong>{sub.name} ({sub.status})</strong>
-                      {sub.contestants?.map((c) => (
-                        <div key={c.id} className="d-flex justify-content-between align-items-center mt-1">
-                          <span>
-                            {c.name} — ${c.price}
-                            {sub.winningContestant === c.id && (
-                              <Trophy size={14} strokeWidth={1.4} className="ms-2 text-warning" aria-label="Winner" />
-                            )}
-                          </span>
-                          {sub.status === 'open' && (
-                            <button
-                              className="btn btn-sm btn-outline-info"
-                              onClick={() => handleDeclareSubWinner(ev.id, sub.id, c.id)}
-                            >
-                              Set Sub Winner
-                            </button>
-                          )}
+                  {editEventData.subEvents.map((sub, subIndex) => (
+                    <div key={sub.id} className="border p-2 mb-2">
+                      <div className="mb-2">
+                        <label>Sub-Event Name:</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={sub.name}
+                          onChange={(e) => handleEditSubEventChange(subIndex, 'name', e.target.value)}
+                        />
+                      </div>
+
+                      {sub.contestants.map((c, cIndex) => (
+                        <div key={c.id} className="d-flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={c.name}
+                            onChange={(e) => handleEditContestantChange(subIndex, cIndex, 'name', e.target.value)}
+                            placeholder="Contestant Name"
+                          />
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={c.price}
+                            onChange={(e) => handleEditContestantChange(subIndex, cIndex, 'price', e.target.value)}
+                            placeholder="Price"
+                          />
                         </div>
                       ))}
-                      {sub.status === 'open' && (
+                    </div>
+                  ))}
+
+                  <button className="btn btn-success me-2" onClick={() => handleSaveEdit(ev.id)}>
+                    Save Changes
+                  </button>
+                  <button className="btn btn-secondary" onClick={handleCancelEdit}>
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <button
+                    className="btn btn-warning btn-sm mb-3"
+                    onClick={() => handleEditClick(ev)}
+                  >
+                    Edit Event
+                  </button>
+
+                  <h6>Main Contestants</h6>
+                  {ev.contestants.map((c) => (
+                    <div key={c.id} className="d-flex justify-content-between align-items-center mb-2">
+                      <span>
+                        {c.name} — ${c.price}
+                        {ev.winningContestant === c.id && (
+                          <Trophy size={16} strokeWidth={1.5} className="ms-2 text-warning" aria-label="Winner" />
+                        )}
+                      </span>
+                      {ev.status === 'open' && (
                         <button
-                          className="btn btn-danger btn-sm mt-2"
-                          onClick={() => handleCloseSubEvent(ev.id, sub.id)}
+                          className="btn btn-sm btn-outline-success"
+                          onClick={() => handleDeclareWinner(ev.id, c.id)}
                         >
-                          Close Sub-Event
+                          Set Winner
                         </button>
                       )}
                     </div>
                   ))}
-                </>
-              )}
 
-              {ev.status === 'open' && (
-                <button className="btn btn-danger mt-3" onClick={() => handleClose(ev.id)}>
-                  Close Main Event
-                </button>
+                  {ev.subEvents?.length > 0 && (
+                    <>
+                      <h6 className="mt-3">Sub Events</h6>
+                      {ev.subEvents.map((sub) => (
+                        <div key={sub.id} className="mb-3 border p-2">
+                          <strong>{sub.name} ({sub.status})</strong>
+                          {sub.contestants?.map((c) => (
+                            <div key={c.id} className="d-flex justify-content-between align-items-center mt-1">
+                              <span>
+                                {c.name} — ${c.price}
+                                {sub.winningContestant === c.id && (
+                                  <Trophy size={14} strokeWidth={1.4} className="ms-2 text-warning" aria-label="Winner" />
+                                )}
+                              </span>
+                              {sub.status === 'open' && (
+                                <button
+                                  className="btn btn-sm btn-outline-info"
+                                  onClick={() => handleDeclareSubWinner(ev.id, sub.id, c.id)}
+                                >
+                                  Set Sub Winner
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          {sub.status === 'open' && (
+                            <button
+                              className="btn btn-danger btn-sm mt-2"
+                              onClick={() => handleCloseSubEvent(ev.id, sub.id)}
+                            >
+                              Close Sub-Event
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  {ev.status === 'open' && (
+                    <button className="btn btn-danger mt-3" onClick={() => handleClose(ev.id)}>
+                      Close Main Event
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
