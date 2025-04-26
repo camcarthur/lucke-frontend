@@ -1,135 +1,9 @@
-// src/pages/bettorPanel.js
+// src/bettorPanel.js
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthContext } from '../context/AuthContext';
 import { apiFetch } from '../api';
-
-const colors = {
-  primaryStart: '#1a1a1a',
-  primaryEnd:   '#2e2e2e',
-  text:         '#ddd',
-  muted:        '#888',
-  cardBg:       '#2e2e2e',
-  border:       '#444',
-  btnPrimaryBg: '#198754',
-  btnPrimaryColor: '#fff',
-  btnOutlineColor: '#ddd',
-  badgeInfoBg:  '#0dcaf0',
-  badgeSuccessBg: '#198754',
-  badgeDangerBg: '#dc3545',
-};
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    padding: '2rem',
-    background: `linear-gradient(135deg, ${colors.primaryStart} 0%, ${colors.primaryEnd} 100%)`,
-    color: colors.text,
-    fontFamily: `Segoe UI, Tahoma, Geneva, Verdana, sans-serif`,
-  },
-  headerContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'start',
-    marginBottom: '1rem',
-    paddingBottom: '0.5rem',
-    borderBottom: `1px solid ${colors.border}`,
-  },
-  headerTitle: {
-    margin: 0,
-  },
-  headerButtons: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-  },
-  btn: {
-    marginRight: '0.5rem',
-    marginBottom: '0.5rem',
-    fontSize: '0.875rem',
-  },
-  balanceText: {
-    color: colors.muted,
-    fontSize: '0.875rem',
-    marginTop: '0.25rem',
-  },
-  card: {
-    background: colors.cardBg,
-    border: `1px solid ${colors.border}`,
-    borderRadius: '0.5rem',
-    color: colors.text,
-  },
-  cardHeader: {
-    background: colors.primaryStart,
-    borderBottom: `1px solid ${colors.border}`,
-  },
-  listGroupItem: {
-    background: colors.cardBg,
-    border: `1px solid ${colors.border}`,
-    color: colors.text,
-  },
-  listGroupItemText: {
-    fontWeight: 500,
-  },
-  listGroupItemId: {
-    color: colors.muted,
-    fontSize: '0.85rem',
-    marginLeft: '0.5rem',
-  },
-  btnPrimary: {
-    background: colors.btnPrimaryBg,
-    color: colors.btnPrimaryColor,
-    border: 'none',
-  },
-  btnOutlineInfo: {
-    background: 'transparent',
-    color: colors.btnOutlineColor,
-    borderColor: colors.btnOutlineColor,
-  },
-  btnOutlineSecondary: {
-    background: 'transparent',
-    color: colors.btnOutlineColor,
-    borderColor: colors.btnOutlineColor,
-  },
-  badgeInfo: {
-    background: colors.badgeInfoBg,
-    color: '#000',
-  },
-  badgeSuccess: {
-    background: colors.badgeSuccessBg,
-    color: '#fff',
-  },
-  badgeDanger: {
-    background: colors.badgeDangerBg,
-    color: '#fff',
-  },
-  table: {
-    background: colors.cardBg,
-    border: `1px solid ${colors.border}`,
-    color: colors.text,
-  },
-  tableHeader: {
-    background: colors.primaryStart,
-    color: colors.text,
-  },
-  tableRow: {
-    borderBottom: `1px solid ${colors.border}`,
-  },
-  formControl: {
-    background: '#333',
-    color: colors.text,
-    border: `1px solid ${colors.border}`,
-  },
-  mockPayment: {
-    border: `1px solid ${colors.border}`,
-    borderRadius: '0.5rem',
-    background: '#333',
-    padding: '1rem',
-    marginTop: '1rem',
-    color: colors.text,
-  },
-};
 
 export default function BettingPortal() {
   const navigate = useNavigate();
@@ -277,42 +151,43 @@ export default function BettingPortal() {
   }
 
   // Derived for rendering
-  const contestants = selectedEvent
-    ? selectedSubEvent?.contestants ?? selectedEvent.contestants
-    : [];
+  const contestants =
+    selectedEvent
+      ? (selectedSubEvent?.contestants ?? selectedEvent.contestants)
+      : [];
   const subClosed = selectedSubEvent?.status !== 'open';
 
   // Render
   return (
-    <div style={styles.container}>
+    <div className="container-fluid py-4">
       {/* Header */}
-      <div style={styles.headerContainer}>
-        <h2 style={styles.headerTitle}>Betting Portal</h2>
+      <div className="d-flex justify-content-between align-items-start mb-4 border-bottom pb-2">
+        <h2 className="mb-0">Betting Portal</h2>
         {auth.isLoggedIn && (
-          <div style={styles.headerButtons}>
+          <div className="d-flex flex-column align-items-end">
             <div>
               {auth.role === 'admin' && (
                 <button
-                  style={{ ...styles.btn, ...styles.btnPrimary }}
+                  className="btn btn-sm btn-primary me-2"
                   onClick={handleCreateEvent}
                 >
                   Create Event
                 </button>
               )}
               <button
-                style={{ ...styles.btn, ...styles.btnOutlineInfo }}
+                className="btn btn-sm btn-outline-info me-2"
                 onClick={() => navigate('/withdraw')}
               >
                 Withdraw
               </button>
               <button
-                style={{ ...styles.btn, ...styles.btnOutlineSecondary }}
+                className="btn btn-sm btn-outline-secondary"
                 onClick={handleLogout}
               >
                 Logout
               </button>
             </div>
-            <div style={styles.balanceText}>
+            <div className="text-muted small mt-1">
               {auth.user.username} | Balance: ${userBalance.toFixed(2)}
             </div>
           </div>
@@ -323,27 +198,19 @@ export default function BettingPortal() {
         {/* Sidebar */}
         <aside className="col-12 col-md-4">
           {/* Your Events */}
-          <div className="card mb-4" style={styles.card}>
-            <div className="card-header" style={styles.cardHeader}>
+          <div className="card shadow-sm mb-4">
+            <div className="card-header">
               <h5 className="mb-0">Your Events</h5>
             </div>
             <ul className="list-group list-group-flush">
               {yourEvents.length ? (
                 yourEvents.map((ev) => (
-                  <li
-                    key={ev.id}
-                    className="list-group-item"
-                    style={styles.listGroupItem}
-                  >
-                    <span style={styles.listGroupItemText}>{ev.name}</span>
-                    <span style={styles.listGroupItemId}>#{ev.id}</span>
+                  <li key={ev.id} className="list-group-item">
+                    {ev.name} <small className="text-muted">#{ev.id}</small>
                   </li>
                 ))
               ) : (
-                <li
-                  className="list-group-item text-muted"
-                  style={styles.listGroupItem}
-                >
+                <li className="list-group-item text-muted">
                   No events added
                 </li>
               )}
@@ -351,8 +218,8 @@ export default function BettingPortal() {
           </div>
 
           {/* All Events */}
-          <div className="card" style={styles.card}>
-            <div className="card-header" style={styles.cardHeader}>
+          <div className="card shadow-sm">
+            <div className="card-header">
               <h5 className="mb-0">All Events</h5>
             </div>
             <ul className="list-group list-group-flush">
@@ -362,16 +229,14 @@ export default function BettingPortal() {
                   <li
                     key={ev.id}
                     className="list-group-item d-flex justify-content-between align-items-center"
-                    style={styles.listGroupItem}
                   >
                     <div>
-                      <strong style={styles.listGroupItemText}>{ev.name}</strong>
+                      <strong>{ev.name}</strong>
                       <br />
-                      <span style={styles.badgeInfo}>{ev.status}</span>
+                      <span className="badge bg-info">{ev.status}</span>
                     </div>
                     <button
-                      className="btn btn-sm"
-                      style={styles.btnPrimary}
+                      className="btn btn-sm btn-outline-primary"
                       onClick={() => handleSelectEvent(ev)}
                     >
                       Select
@@ -380,10 +245,8 @@ export default function BettingPortal() {
                 ))}
             </ul>
           </div>
-
           <button
-            className="btn btn-sm w-100 mt-2"
-            style={styles.btnOutlineSecondary}
+            className="btn btn-outline-secondary w-100 mt-2"
             onClick={() => navigate('/archive')}
           >
             View Archives
@@ -397,31 +260,26 @@ export default function BettingPortal() {
               Select an event
             </div>
           ) : (
-            <div className="card" style={styles.card}>
-              <div
-                className="card-header d-flex justify-content-between align-items-center"
-                style={styles.cardHeader}
-              >
+            <div className="card shadow-sm">
+              <div className="card-header d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">{selectedEvent.name}</h5>
                 <span
-                  style={
-                    selectedEvent.status === 'open'
-                      ? styles.badgeSuccess
-                      : styles.badgeDanger
-                  }
+                  className={`badge bg-${
+                    selectedEvent.status === 'open' ? 'success' : 'danger'
+                  }`}
                 >
                   {selectedEvent.status.toUpperCase()}
                 </span>
               </div>
-
               <div className="card-body">
                 {/* Add to Your Events */}
                 <div className="d-flex mb-3">
                   <button
-                    className="btn btn-sm"
-                    style={styles.btnOutlineInfo}
+                    className="btn btn-sm btn-outline-info me-2"
                     onClick={handleAddToYourEvents}
-                    disabled={yourEvents.some((e) => e.id === selectedEvent.id)}
+                    disabled={yourEvents.some(
+                      (e) => e.id === selectedEvent.id
+                    )}
                   >
                     {yourEvents.some((e) => e.id === selectedEvent.id)
                       ? 'Added'
@@ -432,20 +290,20 @@ export default function BettingPortal() {
                 {/* Sub-Events */}
                 {selectedEvent.subEvents?.length > 0 && (
                   <div className="mb-4">
-                    <h6 style={{ color: colors.text }}>Sub Events</h6>
+                    <h6>Sub Events</h6>
                     <div className="d-flex flex-wrap gap-2">
                       {selectedEvent.subEvents.map((se) => {
                         const closed = se.status !== 'open';
-                        const btnStyle = closed
-                          ? styles.btnOutlineSecondary
-                          : selectedSubEvent?.id === se.id
-                          ? styles.btnPrimary
-                          : styles.btnOutlineInfo;
                         return (
                           <button
                             key={se.id}
-                            className="btn btn-sm"
-                            style={btnStyle}
+                            className={`btn btn-sm ${
+                              closed
+                                ? 'btn-outline-danger disabled'
+                                : selectedSubEvent?.id === se.id
+                                ? 'btn-primary'
+                                : 'btn-outline-primary'
+                            }`}
                             onClick={
                               closed
                                 ? undefined
@@ -465,8 +323,8 @@ export default function BettingPortal() {
 
                 {/* Contestants Table */}
                 <div className="table-responsive">
-                  <table className="table" style={styles.table}>
-                    <thead style={styles.tableHeader}>
+                  <table className="table table-hover table-striped">
+                    <thead className="table-light">
                       <tr>
                         <th>ID</th>
                         <th>Name</th>
@@ -476,18 +334,15 @@ export default function BettingPortal() {
                     </thead>
                     <tbody>
                       {contestants.map((c) => {
+                        // If the sub-event is closed, show a single "Unavailable" button
                         if (subClosed) {
                           return (
-                            <tr key={c.id} style={styles.tableRow}>
+                            <tr key={c.id}>
                               <td>{c.id}</td>
                               <td>{c.name}</td>
                               <td>${c.price}</td>
                               <td>
-                                <button
-                                  className="btn btn-sm"
-                                  style={styles.btnOutlineSecondary}
-                                  disabled
-                                >
+                                <button className="btn btn-sm btn-outline-danger disabled">
                                   Unavailable
                                 </button>
                               </td>
@@ -495,6 +350,7 @@ export default function BettingPortal() {
                           );
                         }
 
+                        // Otherwise use your existing bidding / buy logic
                         const isBidding =
                           selectedSubEvent?.gameType === 'bidding';
                         const fcfs =
@@ -507,7 +363,7 @@ export default function BettingPortal() {
                           );
 
                         return (
-                          <tr key={c.id} style={styles.tableRow}>
+                          <tr key={c.id}>
                             <td>{c.id}</td>
                             <td>{c.name}</td>
                             <td>${c.price}</td>
@@ -516,8 +372,7 @@ export default function BettingPortal() {
                                 <div className="d-flex gap-2">
                                   <input
                                     type="number"
-                                    className="form-control form-control-sm"
-                                    style={styles.formControl}
+                                    className="form-control form-control-sm w-50"
                                     placeholder="Bid"
                                     value={userBids[c.id] || ''}
                                     onChange={(e) =>
@@ -528,8 +383,7 @@ export default function BettingPortal() {
                                     }
                                   />
                                   <button
-                                    className="btn btn-sm"
-                                    style={styles.btnPrimary}
+                                    className="btn btn-sm btn-primary"
                                     onClick={() =>
                                       placeUserBid(
                                         selectedEvent.id,
@@ -544,12 +398,11 @@ export default function BettingPortal() {
                                 </div>
                               ) : (
                                 <button
-                                  className="btn btn-sm"
-                                  style={
+                                  className={`btn btn-sm ${
                                     already
-                                      ? styles.btnOutlineSecondary
-                                      : styles.btnPrimary
-                                  }
+                                      ? 'btn-outline-danger disabled'
+                                      : 'btn-success'
+                                  }`}
                                   onClick={() => handleSelectContestant(c)}
                                 >
                                   {already ? 'Unavailable' : 'Buy'}
@@ -565,23 +418,18 @@ export default function BettingPortal() {
 
                 {/* Mock Payment */}
                 {selectedContestant && (
-                  <div style={styles.mockPayment}>
+                  <div className="border p-4 mt-4 rounded bg-light">
                     <h6>Mock Payment</h6>
                     <div className="mb-3">
                       <label className="form-label">User ID (Name)</label>
                       <input
                         type="text"
                         className="form-control"
-                        style={styles.formControl}
                         value={userId}
                         onChange={(e) => setUserId(e.target.value)}
                       />
                     </div>
-                    <button
-                      className="btn btn-sm"
-                      style={styles.btnPrimary}
-                      onClick={handlePay}
-                    >
+                    <button className="btn btn-primary" onClick={handlePay}>
                       Pay ${selectedContestant.price}
                     </button>
                   </div>
