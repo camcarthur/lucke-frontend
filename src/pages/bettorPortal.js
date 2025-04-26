@@ -88,8 +88,13 @@ export default function BettingPortal() {
   }
 
   // Handle a straight buy (FCFS mode) with confirmation
+  // inside BettingPortal.js
+
+// Handle a straight buy (FCFS mode) with confirmation
   async function handleBuy(contestant) {
-    const price = contestant.price.toFixed(2);
+    // coerce price to number
+    const price = parseFloat(contestant.price).toFixed(2);
+
     if (
       window.confirm(
         `Confirm bet on "${contestant.name}" for $${price}?`
@@ -104,10 +109,8 @@ export default function BettingPortal() {
             body: JSON.stringify({
               userId: auth.user.id,
               contestantId: contestant.id,
-              amount: contestant.price,
-              ...(selectedSubEvent && {
-                subEventId: selectedSubEvent.id,
-              }),
+              amount: parseFloat(price),         // ensure backend gets a number
+              ...(selectedSubEvent && { subEventId: selectedSubEvent.id }),
             }),
           }
         );
@@ -127,6 +130,7 @@ export default function BettingPortal() {
       }
     }
   }
+
 
   // Handlers
   function handleSelectEvent(ev) {
