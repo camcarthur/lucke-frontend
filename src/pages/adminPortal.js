@@ -4,18 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { Trophy } from 'lucide-react';
 
-function AdminPortal() {
+export default function AdminPortal() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [eventName, setEventName] = useState('');
-  const [hasSubEvents, setHasSubEvents] = useState(false);
-  const [mainContestantCount, setMainContestantCount] = useState(1);
-  const [mainContestants, setMainContestants] = useState([]);
   const [subEvents, setSubEvents] = useState([]);
+  const [collapsedSubs, setCollapsedSubs] = useState({});
   const [editingEventId, setEditingEventId] = useState(null);
   const [editEventData, setEditEventData] = useState(null);
-
 
   useEffect(() => {
     fetchEvents();
@@ -34,65 +31,75 @@ function AdminPortal() {
   function handleNewEventClick() {
     setIsCreating(true);
     setEventName('');
-    setHasSubEvents(false);
-    setMainContestantCount(1);
-    setMainContestants([]);
     setSubEvents([]);
-  }
-
-  useEffect(() => {
-    const arr = [];
-    for (let i = 0; i < mainContestantCount; i++) {
-      arr.push({ id: i + 1, name: '', price: 0 });
-    }
-    setMainContestants(arr);
-  }, [mainContestantCount]);
-
-  function handleMainContestantChange(index, field, value) {
-    const updated = [...mainContestants];
-    updated[index][field] = field === 'price' ? Number(value) : value;
-    setMainContestants(updated);
+    setCollapsedSubs({});
   }
 
   function handleAddSubEvent() {
-    const newSubEvent = {
-      id: Date.now(),
+    const id = Date.now();
+    setSubEvents([
+      ...subEvents,
+      {
+        id,
+        name: '',
+        contestantCount: 1,
+        gameType: 'default',
+        contestants: [{ id: 1, name: '', price: 0 }],
+      },
+    ]);
+  }
+
+  function handleSubEventNameChange(idx, value) {
+    const arr = [...subEvents];
+    arr[idx].name = value;
+    setSubEvents(arr);
+  }
+
+  function handleSubEventGameTypeChange(idx, value) {
+    const arr = [...subEvents];
+    arr[idx].gameType = value;
+    setSubEvents(arr);
+  }
+
+  function handleSubEventContestantCountChange(idx, count) {
+    const arr = [...subEvents];
+    arr[idx].contestantCount = count;
+    arr[idx].contestants = Array.from({ length: count }, (_, i) => ({
+      id: i + 1,
       name: '',
-      contestantCount: 1,
-      gameType: 'default',
-      contestants: [{ id: 1, name: '', price: 0 }]
-    };
-    setSubEvents([...subEvents, newSubEvent]);
+      price: 0,
+    }));
+    setSubEvents(arr);
   }
 
-  function handleSubEventNameChange(index, value) {
-    const updated = [...subEvents];
-    updated[index].name = value;
-    setSubEvents(updated);
-  }
-
-  function handleSubEventGameTypeChange(index, value) {
-    const updated = [...subEvents];
-    updated[index].gameType = value;
-    setSubEvents(updated);
-  }
-
-  function handleSubEventContestantCountChange(index, value) {
-    const updated = [...subEvents];
-    updated[index].contestantCount = value;
-    const arr = [];
-    for (let i = 0; i < value; i++) {
-      arr.push({ id: i + 1, name: '', price: 0 });
-    }
-    updated[index].contestants = arr;
-    setSubEvents(updated);
-  }
-
-  function handleSubEventContestantChange(subIndex, contestantIndex, field, value) {
-    const updated = [...subEvents];
-    updated[subIndex].contestants[contestantIndex][field] =
+  function handleSubEventContestantChange(subIdx, cIdx, field, value) {
+    const arr = [...subEvents];
+    arr[subIdx].contestants[cIdx][field] =
       field === 'price' ? Number(value) : value;
-    setSubEvents(updated);
+    setSubEvents(arr);
+  }
+
+  function handleSaveSubEvent(id) {
+    setCollapsedSubs(cs => ({ ...cs, [id]: true }));
+  }
+
+  async function handleCreateEvent(e) {
+    e.preventDefault();
+    try {
+      await apiFetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: eventName,
+          contestants: [],
+          subEvents,
+        }),
+      });
+      setIsCreating(false);
+      fetchEvents();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   function handleEditClick(event) {
@@ -105,85 +112,75 @@ function AdminPortal() {
         contestants: se.contestants.map(c => ({
           id: c.id,
           name: c.name,
-          price: c.price
-        }))
-      }))
+          price: c.price,
+        })),
+      })),
     });
   }
-  
+
   function handleEditChange(field, value) {
     setEditEventData(prev => ({ ...prev, [field]: value }));
   }
-  
-  function handleEditSubEventChange(subIndex, field, value) {
-    const updated = [...editEventData.subEvents];
-    updated[subIndex][field] = value;
-    setEditEventData(prev => ({ ...prev, subEvents: updated }));
+
+  function handleEditSubEventChange(idx, field, value) {
+    const arr = [...editEventData.subEvents];
+    arr[idx][field] = value;
+    setEditEventData(prev => ({ ...prev, subEvents: arr }));
   }
-  
-  function handleEditContestantChange(subIndex, contestantIndex, field, value) {
-    const updated = [...editEventData.subEvents];
-    updated[subIndex].contestants[contestantIndex][field] = field === 'price' ? Number(value) : value;
-    setEditEventData(prev => ({ ...prev, subEvents: updated }));
+
+  function handleEditContestantChange(subIdx, cIdx, field, value) {
+    const arr = [...editEventData.subEvents];
+    arr[subIdx].contestants[cIdx][field] =
+      field === 'price' ? Number(value) : value;
+    setEditEventData(prev => ({ ...prev, subEvents: arr }));
   }
 
   function handleCancelEdit() {
     setEditingEventId(null);
     setEditEventData(null);
-  }  
+  }
 
-  async function handleCreateEvent(e) {
-    e.preventDefault();
+  async function handleSaveEdit(eventId) {
     try {
-      const body = {
-        name: eventName,
-        contestants: hasSubEvents ? [] : mainContestants,
-        subEvents: hasSubEvents ? subEvents : []
-      };
-      const res = await apiFetch('/api/events', {
-        method: 'POST',
+      await apiFetch(`/api/events/${eventId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(editEventData),
       });
-      await res.json();
-      setIsCreating(false);
+      setEditingEventId(null);
+      setEditEventData(null);
       fetchEvents();
     } catch (error) {
       console.error(error);
+      alert('Error saving event edits.');
     }
   }
 
   async function handleClose(eventId) {
     try {
       const res = await apiFetch(`/api/events/${eventId}/close`, {
-        method: 'POST'
+        method: 'POST',
       });
       const data = await res.json();
-  
       if (!res.ok) {
-        console.error('❌ Error closing event:', data.error);
-        console.debug('🛠️ Debug info:', data.debug);  // <== This line is crucial
-        alert(`Error closing event: ${data.error}`);
+        console.error('Error closing event:', data.error);
+        alert(`Error: ${data.error}`);
         return;
       }
-  
-      console.log('✅ Event closed:', data.message);
-      console.debug('🛠️ Debug info:', data.debug);
       fetchEvents();
     } catch (error) {
-      console.error('[handleClose] Unexpected error:', error);
+      console.error(error);
       alert('Unexpected error closing event.');
     }
-  }  
+  }
 
   async function handleDeclareWinner(eventId, contestantId) {
     try {
-      const res = await apiFetch(`/api/events/${eventId}/winner`, {
+      await apiFetch(`/api/events/${eventId}/winner`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contestantId })
+        body: JSON.stringify({ contestantId }),
       });
-      await res.json();
       fetchEvents();
     } catch (error) {
       console.error(error);
@@ -192,12 +189,14 @@ function AdminPortal() {
 
   async function handleDeclareSubWinner(eventId, subId, contestantId) {
     try {
-      const res = await apiFetch(`/api/events/${eventId}/sub-events/${subId}/winner`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contestantId })
-      });
-      await res.json();
+      await apiFetch(
+        `/api/events/${eventId}/sub-events/${subId}/winner`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contestantId }),
+        }
+      );
       fetchEvents();
     } catch (error) {
       console.error(error);
@@ -206,45 +205,31 @@ function AdminPortal() {
 
   async function handleCloseSubEvent(eventId, subId) {
     try {
-      const res = await apiFetch(`/api/events/${eventId}/sub-events/${subId}/close`, {
-        method: 'POST'
+      await apiFetch(`/api/events/${eventId}/sub-events/${subId}/close`, {
+        method: 'POST',
       });
-      await res.json();
       fetchEvents();
     } catch (error) {
       console.error(error);
     }
   }
 
-  async function handleSaveEdit(eventId) {
-    try {
-      const res = await apiFetch(`/api/events/${eventId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editEventData)
-      });
-      await res.json();
-      setEditingEventId(null);
-      setEditEventData(null);
-      fetchEvents();
-    } catch (error) {
-      console.error(error);
-      alert('Error saving event edits.');
-    }
-  }  
-
   return (
     <div className="container pt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Admin Portal</h1>
-        <div>
-          <button className="btn btn-primary" onClick={() => navigate('/betting')}>
-            To Homepage
-          </button>
-        </div>
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate('/betting')}
+        >
+          To Homepage
+        </button>
       </div>
 
-      <button className="btn btn-primary mb-3" onClick={handleNewEventClick}>
+      <button
+        className="btn btn-primary mb-3"
+        onClick={handleNewEventClick}
+      >
         New Event
       </button>
 
@@ -258,132 +243,146 @@ function AdminPortal() {
                 type="text"
                 className="form-control"
                 value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
+                onChange={e => setEventName(e.target.value)}
                 required
               />
             </div>
-            <div className="mb-3">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={hasSubEvents}
-                  onChange={(e) => setHasSubEvents(e.target.checked)}
-                />{' '}
-                This event has sub events
-              </label>
-            </div>
 
-            {hasSubEvents ? (
-              <div>
-                <h4>Sub Events</h4>
-                <button type="button" className="btn btn-secondary mb-3" onClick={handleAddSubEvent}>
-                  Add Sub Event
-                </button>
-                {subEvents.map((subEvent, subIndex) => (
-                  <div key={subEvent.id} className="border p-3 mb-3">
+            <div>
+              <h4>Sub Events</h4>
+              <button
+                type="button"
+                className="btn btn-secondary mb-3"
+                onClick={handleAddSubEvent}
+              >
+                Add Sub Event
+              </button>
+
+              {subEvents.map((sub, idx) =>
+                collapsedSubs[sub.id] ? (
+                  <div
+                    key={sub.id}
+                    className="border p-3 mb-3 d-flex justify-content-between align-items-center"
+                  >
+                    <strong>
+                      {sub.name || `Sub Event ${idx + 1}`}
+                    </strong>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() =>
+                        setCollapsedSubs(cs => ({
+                          ...cs,
+                          [sub.id]: false,
+                        }))
+                      }
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ) : (
+                  <div key={sub.id} className="border p-3 mb-3">
                     <div className="mb-3">
                       <label>Sub Event Name:</label>
                       <input
                         type="text"
                         className="form-control"
-                        value={subEvent.name}
-                        onChange={(e) => handleSubEventNameChange(subIndex, e.target.value)}
+                        value={sub.name}
+                        onChange={e =>
+                          handleSubEventNameChange(idx, e.target.value)
+                        }
                         required
                       />
                     </div>
                     <div className="mb-3">
-                      <label>How many contestants in this sub event?</label>
+                      <label>Contestant Count:</label>
                       <input
                         type="number"
                         className="form-control"
-                        value={subEvent.contestantCount}
-                        onChange={(e) =>
-                          handleSubEventContestantCountChange(subIndex, Number(e.target.value))
-                        }
                         min="1"
+                        value={sub.contestantCount}
+                        onChange={e =>
+                          handleSubEventContestantCountChange(
+                            idx,
+                            Number(e.target.value)
+                          )
+                        }
                       />
                     </div>
                     <div className="mb-3">
                       <label>Game Type:</label>
                       <select
                         className="form-control"
-                        value={subEvent.gameType || 'default'}
-                        onChange={(e) => handleSubEventGameTypeChange(subIndex, e.target.value)}
+                        value={sub.gameType}
+                        onChange={e =>
+                          handleSubEventGameTypeChange(idx, e.target.value)
+                        }
                       >
                         <option value="default">Default</option>
-                        <option value="first-come-first-serve">First Come First Serve</option>
+                        <option value="first-come-first-serve">
+                          First Come First Serve
+                        </option>
                         <option value="bidding">Bidding</option>
                       </select>
                     </div>
 
-                    {subEvent.contestants.map((contestant, cIndex) => (
-                      <div key={contestant.id} className="mb-3">
-                        <label>Contestant #{contestant.id} Name</label>
+                    {sub.contestants.map((c, cIdx) => (
+                      <div key={c.id} className="mb-3">
+                        <label>Contestant #{c.id} Name</label>
                         <input
                           type="text"
                           className="form-control"
-                          value={contestant.name}
-                          onChange={(e) =>
-                            handleSubEventContestantChange(subIndex, cIndex, 'name', e.target.value)
+                          value={c.name}
+                          onChange={e =>
+                            handleSubEventContestantChange(
+                              idx,
+                              cIdx,
+                              'name',
+                              e.target.value
+                            )
                           }
                           required
                         />
-
                         <label>
-                          {subEvent.gameType === 'bidding' ? 'Initial Bid Price' : 'Price'}
+                          {sub.gameType === 'bidding'
+                            ? 'Initial Bid Price'
+                            : 'Price'}
                         </label>
                         <input
                           type="number"
                           className="form-control"
-                          value={contestant.price}
-                          onChange={(e) =>
-                            handleSubEventContestantChange(subIndex, cIndex, 'price', e.target.value)
-                          }
                           min="0"
+                          value={c.price}
+                          onChange={e =>
+                            handleSubEventContestantChange(
+                              idx,
+                              cIdx,
+                              'price',
+                              e.target.value
+                            )
+                          }
                           required
                         />
                       </div>
                     ))}
+
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={() => handleSaveSubEvent(sub.id)}
+                    >
+                      Save Sub Event
+                    </button>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div>
-                <h4>Main Event Contestants</h4>
-                <div className="mb-3">
-                  <label>How many contestants?</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={mainContestantCount}
-                    onChange={(e) => setMainContestantCount(Number(e.target.value))}
-                    min="1"
-                  />
-                </div>
-                {mainContestants.map((c, idx) => (
-                  <div className="mb-3" key={c.id}>
-                    <label>Contestant #{c.id} Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={c.name}
-                      onChange={(e) => handleMainContestantChange(idx, 'name', e.target.value)}
-                      required
-                    />
-                    <label>Contestant #{c.id} Price</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={c.price}
-                      onChange={(e) => handleMainContestantChange(idx, 'price', e.target.value)}
-                      min="0"
-                      required
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-            <button type="submit" className="btn btn-success">
+                )
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-success"
+              disabled={!eventName.trim() || subEvents.length === 0}
+            >
               Create Event
             </button>
           </form>
@@ -394,7 +393,7 @@ function AdminPortal() {
 
       <h2>All Events</h2>
       <div className="accordion" id="eventsAccordion">
-        {events.map((ev) => (
+        {events.map(ev => (
           <div className="card mb-3" key={ev.id}>
             <div className="card-header">
               <h5>
@@ -403,43 +402,70 @@ function AdminPortal() {
             </div>
             <div className="card-body">
               {editingEventId === ev.id ? (
-                <div>
+                <>
                   <div className="mb-3">
                     <label>Edit Event Name:</label>
                     <input
                       type="text"
                       className="form-control"
                       value={editEventData.name}
-                      onChange={(e) => handleEditChange('name', e.target.value)}
+                      onChange={e =>
+                        handleEditChange('name', e.target.value)
+                      }
                     />
                   </div>
 
-                  {editEventData.subEvents.map((sub, subIndex) => (
-                    <div key={sub.id} className="border p-2 mb-2">
+                  {editEventData.subEvents.map((sub, sIdx) => (
+                    <div
+                      key={sub.id}
+                      className="border p-2 mb-2"
+                    >
                       <div className="mb-2">
                         <label>Sub-Event Name:</label>
                         <input
                           type="text"
                           className="form-control"
                           value={sub.name}
-                          onChange={(e) => handleEditSubEventChange(subIndex, 'name', e.target.value)}
+                          onChange={e =>
+                            handleEditSubEventChange(
+                              sIdx,
+                              'name',
+                              e.target.value
+                            )
+                          }
                         />
                       </div>
-
-                      {sub.contestants.map((c, cIndex) => (
-                        <div key={c.id} className="d-flex gap-2 mb-2">
+                      {sub.contestants.map((c, cIdx) => (
+                        <div
+                          key={c.id}
+                          className="d-flex gap-2 mb-2"
+                        >
                           <input
                             type="text"
                             className="form-control"
                             value={c.name}
-                            onChange={(e) => handleEditContestantChange(subIndex, cIndex, 'name', e.target.value)}
+                            onChange={e =>
+                              handleEditContestantChange(
+                                sIdx,
+                                cIdx,
+                                'name',
+                                e.target.value
+                              )
+                            }
                             placeholder="Contestant Name"
                           />
                           <input
                             type="number"
                             className="form-control"
                             value={c.price}
-                            onChange={(e) => handleEditContestantChange(subIndex, cIndex, 'price', e.target.value)}
+                            onChange={e =>
+                              handleEditContestantChange(
+                                sIdx,
+                                cIdx,
+                                'price',
+                                e.target.value
+                              )
+                            }
                             placeholder="Price"
                           />
                         </div>
@@ -447,15 +473,21 @@ function AdminPortal() {
                     </div>
                   ))}
 
-                  <button className="btn btn-success me-2" onClick={() => handleSaveEdit(ev.id)}>
+                  <button
+                    className="btn btn-success me-2"
+                    onClick={() => handleSaveEdit(ev.id)}
+                  >
                     Save Changes
                   </button>
-                  <button className="btn btn-secondary" onClick={handleCancelEdit}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={handleCancelEdit}
+                  >
                     Cancel
                   </button>
-                </div>
+                </>
               ) : (
-                <div>
+                <>
                   <button
                     className="btn btn-warning btn-sm mb-3"
                     onClick={() => handleEditClick(ev)}
@@ -464,18 +496,28 @@ function AdminPortal() {
                   </button>
 
                   <h6>Main Contestants</h6>
-                  {ev.contestants.map((c) => (
-                    <div key={c.id} className="d-flex justify-content-between align-items-center mb-2">
+                  {ev.contestants.map(c => (
+                    <div
+                      key={c.id}
+                      className="d-flex justify-content-between align-items-center mb-2"
+                    >
                       <span>
                         {c.name} — ${c.price}
                         {ev.winningContestant === c.id && (
-                          <Trophy size={16} strokeWidth={1.5} className="ms-2 text-warning" aria-label="Winner" />
+                          <Trophy
+                            size={16}
+                            strokeWidth={1.5}
+                            className="ms-2 text-warning"
+                            aria-label="Winner"
+                          />
                         )}
                       </span>
                       {ev.status === 'open' && (
                         <button
                           className="btn btn-sm btn-outline-success"
-                          onClick={() => handleDeclareWinner(ev.id, c.id)}
+                          onClick={() =>
+                            handleDeclareWinner(ev.id, c.id)
+                          }
                         >
                           Set Winner
                         </button>
@@ -486,21 +528,40 @@ function AdminPortal() {
                   {ev.subEvents?.length > 0 && (
                     <>
                       <h6 className="mt-3">Sub Events</h6>
-                      {ev.subEvents.map((sub) => (
-                        <div key={sub.id} className="mb-3 border p-2">
-                          <strong>{sub.name} ({sub.status})</strong>
-                          {sub.contestants?.map((c) => (
-                            <div key={c.id} className="d-flex justify-content-between align-items-center mt-1">
+                      {ev.subEvents.map(sub => (
+                        <div
+                          key={sub.id}
+                          className="mb-3 border p-2"
+                        >
+                          <strong>
+                            {sub.name} ({sub.status})
+                          </strong>
+                          {sub.contestants.map(c => (
+                            <div
+                              key={c.id}
+                              className="d-flex justify-content-between align-items-center mt-1"
+                            >
                               <span>
                                 {c.name} — ${c.price}
                                 {sub.winningContestant === c.id && (
-                                  <Trophy size={14} strokeWidth={1.4} className="ms-2 text-warning" aria-label="Winner" />
+                                  <Trophy
+                                    size={14}
+                                    strokeWidth={1.4}
+                                    className="ms-2 text-warning"
+                                    aria-label="Winner"
+                                  />
                                 )}
                               </span>
                               {sub.status === 'open' && (
                                 <button
                                   className="btn btn-sm btn-outline-info"
-                                  onClick={() => handleDeclareSubWinner(ev.id, sub.id, c.id)}
+                                  onClick={() =>
+                                    handleDeclareSubWinner(
+                                      ev.id,
+                                      sub.id,
+                                      c.id
+                                    )
+                                  }
                                 >
                                   Set Sub Winner
                                 </button>
@@ -510,7 +571,9 @@ function AdminPortal() {
                           {sub.status === 'open' && (
                             <button
                               className="btn btn-danger btn-sm mt-2"
-                              onClick={() => handleCloseSubEvent(ev.id, sub.id)}
+                              onClick={() =>
+                                handleCloseSubEvent(ev.id, sub.id)
+                              }
                             >
                               Close Sub-Event
                             </button>
@@ -521,11 +584,14 @@ function AdminPortal() {
                   )}
 
                   {ev.status === 'open' && (
-                    <button className="btn btn-danger mt-3" onClick={() => handleClose(ev.id)}>
+                    <button
+                      className="btn btn-danger mt-3"
+                      onClick={() => handleClose(ev.id)}
+                    >
                       Close Main Event
                     </button>
                   )}
-                </div>
+                </>
               )}
             </div>
           </div>
@@ -534,5 +600,3 @@ function AdminPortal() {
     </div>
   );
 }
-
-export default AdminPortal;
