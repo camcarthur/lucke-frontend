@@ -203,16 +203,29 @@ export default function AdminPortal() {
     }
   }
 
-  async function handleCloseSubEvent(eventId, subId) {
-    try {
-      await apiFetch(`/api/events/${eventId}/sub-events/${subId}/close`, {
-        method: 'POST',
-      });
-      fetchEvents();
-    } catch (error) {
-      console.error(error);
-    }
-  }
+   async function handleCloseSubEvent(eventId, subId) {
+       try {
+         const res = await apiFetch(
+           `/api/events/${eventId}/sub-events/${subId}/close`,
+           { method: 'POST' }
+         );
+         const payload = await res.json();
+         if (!res.ok) throw new Error(payload.error);
+    
+         // show payouts summary
+         alert(
+           `Distributed net pot $${payload.debug.netPot.toFixed(2)} (house cut $${payload.debug.houseCut.toFixed(2)}):\n` +
+           Object.entries(payload.distribution)
+             .map(([userId, amt]) => `• User ${userId}: $${amt.toFixed(2)}`)
+             .join('\n')
+         );
+    
+         fetchEvents();
+       } catch (err) {
+         console.error(err);
+         alert('Failed to close sub-event: ' + err.message);
+       }
+     }
 
   return (
     <div className="container pt-4">
