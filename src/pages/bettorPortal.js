@@ -194,7 +194,7 @@ export default function BettingPortal() {
                 Logout
               </button>
             </div>
-            <div className="text-muted small mt-1">
+            <div className="text-light small mt-1">
               {auth.user.username} | Balance: $
               {userBalance.toFixed(2)}
             </div>
