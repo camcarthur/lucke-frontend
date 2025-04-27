@@ -1,4 +1,4 @@
-// src/bettorPanel.js
+// src/pages/BettingPortal.js
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -17,8 +17,6 @@ export default function BettingPortal() {
   const [yourEvents, setYourEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedSubEvent, setSelectedSubEvent] = useState(null);
-  const [selectedContestant, setSelectedContestant] = useState(null);
-  const [userId, setUserId] = useState('');
   const [userBids, setUserBids] = useState({});
 
   // Effects
@@ -64,7 +62,7 @@ export default function BettingPortal() {
     }
   }
 
-  // Place a bid
+  // Place a bid (bidding mode)
   async function placeUserBid(eventId, subEventId, contestantId, amount) {
     if (!amount || isNaN(amount)) {
       return alert('Please enter a valid bid amount.');
@@ -74,7 +72,7 @@ export default function BettingPortal() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
+          userId: auth.user.id,
           individual: contestantId,
           amount: Number(amount),
           ...(subEventId && { subEventId }),
@@ -89,50 +87,55 @@ export default function BettingPortal() {
     }
   }
 
-  // Mock payment
-  async function handlePay() {
-    if (!selectedEvent || !selectedContestant || !userId) {
-      return alert('Missing info: userId, event, or contestant');
-    }
-    const body = {
-      userId,
-      contestantId: selectedContestant.id,
-      amount: selectedContestant.price,
-      ...(selectedSubEvent && { subEventId: selectedSubEvent.id }),
-    };
-    try {
-      const res = await apiFetch(`/api/events/${selectedEvent.id}/bets`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (data.error) alert(`Error: ${data.error}`);
-      else {
-        alert(
-          `Purchased ${selectedContestant.name} for $${selectedContestant.price}`
+  // Handle a straight buy (FCFS mode) with confirmation
+  // inside BettingPortal.js
+
+// Handle a straight buy (FCFS mode) with confirmation
+  async function handleBuy(contestant) {
+    // coerce price to number
+    const price = parseFloat(contestant.price).toFixed(2);
+
+    if (
+      window.confirm(
+        `Confirm bet on "${contestant.name}" for $${price}?`
+      )
+    ) {
+      try {
+        const res = await apiFetch(
+          `/api/events/${selectedEvent.id}/bets`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: auth.user.id,
+              contestantId: contestant.id,
+              amount: parseFloat(price),         // ensure backend gets a number
+              ...(selectedSubEvent && { subEventId: selectedSubEvent.id }),
+            }),
+          }
         );
-        setUserBalance((bal) =>
-          +(bal - parseFloat(selectedContestant.price)).toFixed(2)
-        );
+        const data = await res.json();
+        if (data.error) {
+          alert(`Error: ${data.error}`);
+        } else {
+          alert(`Purchased ${contestant.name} for $${price}`);
+          setUserBalance((bal) =>
+            +(bal - parseFloat(price)).toFixed(2)
+          );
+          refreshSelectedEvent();
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Purchase failed. Try again.');
       }
-      setSelectedContestant(null);
-      setUserId('');
-      refreshSelectedEvent();
-    } catch (err) {
-      console.error(err);
-      alert('Payment failed. Try again.');
     }
   }
+
 
   // Handlers
   function handleSelectEvent(ev) {
     setSelectedEvent(ev);
     setSelectedSubEvent(null);
-    setSelectedContestant(null);
-  }
-  function handleSelectContestant(c) {
-    setSelectedContestant(c);
   }
   function handleAddToYourEvents() {
     if (
@@ -151,13 +154,11 @@ export default function BettingPortal() {
   }
 
   // Derived for rendering
-  const contestants =
-    selectedEvent
-      ? (selectedSubEvent?.contestants ?? selectedEvent.contestants)
-      : [];
+  const contestants = selectedEvent
+    ? selectedSubEvent?.contestants ?? selectedEvent.contestants
+    : [];
   const subClosed = selectedSubEvent?.status !== 'open';
 
-  // Render
   return (
     <div className="container-fluid py-4">
       {/* Header */}
@@ -188,7 +189,8 @@ export default function BettingPortal() {
               </button>
             </div>
             <div className="text-muted small mt-1">
-              {auth.user.username} | Balance: ${userBalance.toFixed(2)}
+              {auth.user.username} | Balance: $
+              {userBalance.toFixed(2)}
             </div>
           </div>
         )}
@@ -206,7 +208,8 @@ export default function BettingPortal() {
               {yourEvents.length ? (
                 yourEvents.map((ev) => (
                   <li key={ev.id} className="list-group-item">
-                    {ev.name} <small className="text-muted">#{ev.id}</small>
+                    {ev.name}{' '}
+                    <small className="text-muted">#{ev.id}</small>
                   </li>
                 ))
               ) : (
@@ -233,7 +236,9 @@ export default function BettingPortal() {
                     <div>
                       <strong>{ev.name}</strong>
                       <br />
-                      <span className="badge bg-info">{ev.status}</span>
+                      <span className="badge bg-info">
+                        {ev.status}
+                      </span>
                     </div>
                     <button
                       className="btn btn-sm btn-outline-primary"
@@ -265,7 +270,9 @@ export default function BettingPortal() {
                 <h5 className="mb-0">{selectedEvent.name}</h5>
                 <span
                   className={`badge bg-${
-                    selectedEvent.status === 'open' ? 'success' : 'danger'
+                    selectedEvent.status === 'open'
+                      ? 'success'
+                      : 'danger'
                   }`}
                 >
                   {selectedEvent.status.toUpperCase()}
@@ -281,7 +288,9 @@ export default function BettingPortal() {
                       (e) => e.id === selectedEvent.id
                     )}
                   >
-                    {yourEvents.some((e) => e.id === selectedEvent.id)
+                    {yourEvents.some(
+                      (e) => e.id === selectedEvent.id
+                    )
                       ? 'Added'
                       : 'Add to Your Events'}
                   </button>
@@ -309,7 +318,6 @@ export default function BettingPortal() {
                                 ? undefined
                                 : () => {
                                     setSelectedSubEvent(se);
-                                    setSelectedContestant(null);
                                   }
                             }
                           >
@@ -334,7 +342,6 @@ export default function BettingPortal() {
                     </thead>
                     <tbody>
                       {contestants.map((c) => {
-                        // If the sub-event is closed, show a single "Unavailable" button
                         if (subClosed) {
                           return (
                             <tr key={c.id}>
@@ -350,9 +357,9 @@ export default function BettingPortal() {
                           );
                         }
 
-                        // Otherwise use your existing bidding / buy logic
                         const isBidding =
-                          selectedSubEvent?.gameType === 'bidding';
+                          selectedSubEvent?.gameType ===
+                          'bidding';
                         const fcfs =
                           selectedSubEvent?.gameType ===
                           'first-come-first-serve';
@@ -403,7 +410,7 @@ export default function BettingPortal() {
                                       ? 'btn-outline-danger disabled'
                                       : 'btn-success'
                                   }`}
-                                  onClick={() => handleSelectContestant(c)}
+                                  onClick={() => handleBuy(c)}
                                 >
                                   {already ? 'Unavailable' : 'Buy'}
                                 </button>
@@ -415,25 +422,6 @@ export default function BettingPortal() {
                     </tbody>
                   </table>
                 </div>
-
-                {/* Mock Payment */}
-                {selectedContestant && (
-                  <div className="border p-4 mt-4 rounded bg-light">
-                    <h6>Mock Payment</h6>
-                    <div className="mb-3">
-                      <label className="form-label">User ID (Name)</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={userId}
-                        onChange={(e) => setUserId(e.target.value)}
-                      />
-                    </div>
-                    <button className="btn btn-primary" onClick={handlePay}>
-                      Pay ${selectedContestant.price}
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           )}
