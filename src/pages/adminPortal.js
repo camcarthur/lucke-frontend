@@ -22,11 +22,16 @@ export default function AdminPortal() {
     try {
       const res = await apiFetch('/api/events');
       const data = await res.json();
-      setEvents(data);
+      const sorted = [...data].sort((a, b) => {
+        if (a.status === 'open' && b.status !== 'open') return -1;
+        if (a.status !== 'open' && b.status === 'open') return 1;
+        return 0;
+      });
+      setEvents(sorted);
     } catch (error) {
       console.error(error);
     }
-  }
+  }  
 
   function handleNewEventClick() {
     setIsCreating(true);
