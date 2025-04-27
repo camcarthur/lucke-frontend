@@ -160,7 +160,13 @@ export default function BettingPortal() {
   const subClosed = selectedSubEvent?.status !== 'open';
 
   return (
-    <div className="container-fluid py-4">
+    <div
+      className="container-fluid py-4 text-white"
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 100%)',
+      }}
+    >
       {/* Header */}
       <div className="d-flex justify-content-between align-items-start mb-4 border-bottom pb-2">
         <h2 className="mb-0">Betting Portal</h2>
@@ -169,20 +175,20 @@ export default function BettingPortal() {
             <div>
               {auth.role === 'admin' && (
                 <button
-                  className="btn btn-sm btn-primary me-2"
+                  className="btn btn-sm btn-success me-2"
                   onClick={handleCreateEvent}
                 >
                   Create Event
                 </button>
               )}
               <button
-                className="btn btn-sm btn-outline-info me-2"
+                className="btn btn-sm btn-outline-success me-2"
                 onClick={() => navigate('/withdraw')}
               >
                 Withdraw
               </button>
               <button
-                className="btn btn-sm btn-outline-secondary"
+                className="btn btn-sm btn-outline-light"
                 onClick={handleLogout}
               >
                 Logout
@@ -241,7 +247,7 @@ export default function BettingPortal() {
                       </span>
                     </div>
                     <button
-                      className="btn btn-sm btn-outline-primary"
+                      className="btn btn-sm btn-outline-success"
                       onClick={() => handleSelectEvent(ev)}
                     >
                       Select
@@ -251,7 +257,7 @@ export default function BettingPortal() {
             </ul>
           </div>
           <button
-            className="btn btn-outline-secondary w-100 mt-2"
+            className="btn btn-outline-light w-100 mt-2"
             onClick={() => navigate('/archive')}
           >
             View Archives
@@ -282,7 +288,7 @@ export default function BettingPortal() {
                 {/* Add to Your Events */}
                 <div className="d-flex mb-3">
                   <button
-                    className="btn btn-sm btn-outline-info me-2"
+                    className="btn btn-sm btn-outline-success me-2"
                     onClick={handleAddToYourEvents}
                     disabled={yourEvents.some(
                       (e) => e.id === selectedEvent.id
@@ -310,8 +316,8 @@ export default function BettingPortal() {
                               closed
                                 ? 'btn-outline-danger disabled'
                                 : selectedSubEvent?.id === se.id
-                                ? 'btn-primary'
-                                : 'btn-outline-primary'
+                                ? 'btn-success'
+                                : 'btn-outline-success'
                             }`}
                             onClick={
                               closed
@@ -390,7 +396,7 @@ export default function BettingPortal() {
                                     }
                                   />
                                   <button
-                                    className="btn btn-sm btn-primary"
+                                    className="btn btn-sm btn-success"
                                     onClick={() =>
                                       placeUserBid(
                                         selectedEvent.id,
