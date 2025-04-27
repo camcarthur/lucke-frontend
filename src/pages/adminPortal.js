@@ -142,19 +142,19 @@ export default function AdminPortal() {
 
   async function handleSaveEdit(eventId) {
     try {
-      await apiFetch(`/api/events/${eventId}`, {
-        method: 'PUT',
+      await apiFetch(`/api/events/${eventId}/edit`, {  // 👈 notice `/edit` now
+        method: 'POST',   // 👈 changed from PUT to POST
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editEventData),
+        body: JSON.stringify(editEventData)
       });
       setEditingEventId(null);
       setEditEventData(null);
       fetchEvents();
     } catch (error) {
       console.error(error);
-      alert('Error saving event edits.');
+      alert('Error saving edits.');
     }
-  }
+  }  
 
   async function handleClose(eventId) {
     try {
