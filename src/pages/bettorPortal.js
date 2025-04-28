@@ -1,12 +1,13 @@
-// src/pages/BettingPortal.js
+// src/pages/BettorPortal.js
 import React, { useEffect, useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthContext } from '../context/AuthContext';
 import { apiFetch } from '../api';
 
 export default function BettingPortal() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { auth, logout } = useContext(AuthContext);
 
   // State
@@ -18,6 +19,7 @@ export default function BettingPortal() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedSubEvent, setSelectedSubEvent] = useState(null);
   const [userBids, setUserBids] = useState({});
+  const [qrEventSelected, setQrEventSelected] = useState(false);
 
   // Effects
   useEffect(() => {
@@ -29,6 +31,21 @@ export default function BettingPortal() {
   useEffect(() => {
     fetchAllEvents();
   }, []);
+
+  // Auto‐select via QR ?eventId=
+  useEffect(() => {
+    if (events.length && !qrEventSelected) {
+      const params = new URLSearchParams(location.search);
+      const eventIdParam = params.get('eventId');
+      if (eventIdParam) {
+        const ev = events.find((e) => e.id.toString() === eventIdParam);
+        if (ev) {
+          handleSelectEvent(ev);
+          setQrEventSelected(true);
+        }
+      }
+    }
+  }, [events, location.search, qrEventSelected]);
 
   // Fetch all events
   async function fetchAllEvents() {
@@ -87,14 +104,9 @@ export default function BettingPortal() {
     }
   }
 
-  // Handle a straight buy (FCFS mode) with confirmation
-  // inside BettingPortal.js
-
-// Handle a straight buy (FCFS mode) with confirmation
+  // Handle a straight buy (FCFS mode)
   async function handleBuy(contestant) {
-    // coerce price to number
     const price = parseFloat(contestant.price).toFixed(2);
-
     if (
       window.confirm(
         `Confirm bet on "${contestant.name}" for $${price}?`
@@ -109,7 +121,7 @@ export default function BettingPortal() {
             body: JSON.stringify({
               userId: auth.user.id,
               contestantId: contestant.id,
-              amount: parseFloat(price),         // ensure backend gets a number
+              amount: parseFloat(price),
               ...(selectedSubEvent && { subEventId: selectedSubEvent.id }),
             }),
           }
@@ -130,7 +142,6 @@ export default function BettingPortal() {
       }
     }
   }
-
 
   // Handlers
   function handleSelectEvent(ev) {
