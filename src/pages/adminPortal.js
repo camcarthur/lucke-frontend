@@ -7,7 +7,7 @@ import QRCode from 'react-qr-code';
 
 const qrCornerStyle = {
   position: 'absolute',
-  top: 8,
+  top: 38,
   right: 8,
   cursor: 'pointer',
   background: 'white',
