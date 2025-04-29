@@ -432,9 +432,13 @@ export default function AdminPortal() {
       <div className="accordion" id="eventsAccordion">
         {events.map(ev => (
           <div
-            className="card mb-3"
+            className="card mb-3 text-white"
             key={ev.id}
-            style={{ position: 'relative' }}       // make QR corner absolute
+            style={{
+              position: 'relative',
+              backgroundColor: '#3a3a3a',
+              borderColor: '#444',
+            }}
           >
             <div className="card-header">
               <h5>
