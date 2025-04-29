@@ -246,11 +246,17 @@ export default function AdminPortal() {
   }
 
   return (
-    <div className="container pt-4">
+    <div
+      className="container pt-4 text-white"
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 100%)',
+      }}
+    >
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <h1>Admin Portal</h1>
         <button
-          className="btn btn-primary"
+          className="btn btn-success"
           onClick={() => navigate('/betting')}
         >
           To Homepage
@@ -258,7 +264,7 @@ export default function AdminPortal() {
       </div>
 
       <button
-        className="btn btn-primary mb-3"
+        className="btn btn-success mb-3"
         onClick={handleNewEventClick}
       >
         New Event
@@ -283,7 +289,7 @@ export default function AdminPortal() {
               <h4>Sub Events</h4>
               <button
                 type="button"
-                className="btn btn-secondary mb-3"
+                className="btn btn-outline-success mb-3"
                 onClick={handleAddSubEvent}
               >
                 Add Sub Event
@@ -601,7 +607,7 @@ export default function AdminPortal() {
                               </span>
                               {sub.status === 'open' && (
                                 <button
-                                  className="btn btn-sm btn-outline-info"
+                                  className="btn btn-sm btn-outline-success"
                                   onClick={() =>
                                     handleDeclareSubWinner(
                                       ev.id,
