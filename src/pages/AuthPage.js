@@ -29,8 +29,8 @@ const styles = {
     marginBottom: 20,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 150,
+    height: 150,
     marginBottom: 10,
   },
   title: {
@@ -152,7 +152,7 @@ export default function AuthPage() {
           alt="Calcutta Logo"
           style={styles.logo}
         />
-        <h1 style={styles.title}>Calcutta Betting</h1>
+        <h1 style={styles.title}>Lucke Calcutta</h1>
       </header>
 
       <div style={styles.card}>

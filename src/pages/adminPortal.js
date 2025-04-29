@@ -3,6 +3,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { Trophy } from 'lucide-react';
+import QRCode from 'react-qr-code';
+
+const qrCornerStyle = {
+  position: 'absolute',
+  top: 56,
+  right: 8,
+  cursor: 'pointer',
+  background: 'white',
+  padding: 4,
+  borderRadius: 4,
+};
 
 export default function AdminPortal() {
   const navigate = useNavigate();
@@ -13,6 +24,9 @@ export default function AdminPortal() {
   const [collapsedSubs, setCollapsedSubs] = useState({});
   const [editingEventId, setEditingEventId] = useState(null);
   const [editEventData, setEditEventData] = useState(null);
+
+  // New: track which event's QR is showing in modal
+  const [qrModalEventId, setQrModalEventId] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -31,7 +45,7 @@ export default function AdminPortal() {
     } catch (error) {
       console.error(error);
     }
-  }  
+  }
 
   function handleNewEventClick() {
     setIsCreating(true);
@@ -147,10 +161,10 @@ export default function AdminPortal() {
 
   async function handleSaveEdit(eventId) {
     try {
-      await apiFetch(`/api/events/${eventId}/edit`, {  // 👈 notice `/edit` now
-        method: 'POST',   // 👈 changed from PUT to POST
+      await apiFetch(`/api/events/${eventId}/edit`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editEventData)
+        body: JSON.stringify(editEventData),
       });
       setEditingEventId(null);
       setEditEventData(null);
@@ -159,7 +173,7 @@ export default function AdminPortal() {
       console.error(error);
       alert('Error saving edits.');
     }
-  }  
+  }
 
   async function handleClose(eventId) {
     try {
@@ -208,33 +222,32 @@ export default function AdminPortal() {
     }
   }
 
-   async function handleCloseSubEvent(eventId, subId) {
-       try {
-         const res = await apiFetch(
-           `/api/events/${eventId}/sub-events/${subId}/close`,
-           { method: 'POST' }
-         );
-         const payload = await res.json();
-         if (!res.ok) throw new Error(payload.error);
-    
-         // show payouts summary
-         alert(
-           `Distributed net pot $${payload.debug.netPot.toFixed(2)} (house cut $${payload.debug.houseCut.toFixed(2)}):\n` +
-           Object.entries(payload.distribution)
-             .map(([userId, amt]) => `• User ${userId}: $${amt.toFixed(2)}`)
-             .join('\n')
-         );
-    
-         fetchEvents();
-       } catch (err) {
-         console.error(err);
-         alert('Failed to close sub-event: ' + err.message);
-       }
-     }
+  async function handleCloseSubEvent(eventId, subId) {
+    try {
+      const res = await apiFetch(
+        `/api/events/${eventId}/sub-events/${subId}/close`,
+        { method: 'POST' }
+      );
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error);
+
+      alert(
+        `Distributed net pot $${payload.debug.netPot.toFixed(2)} (house cut $${payload.debug.houseCut.toFixed(2)}):\n` +
+          Object.entries(payload.distribution)
+            .map(([userId, amt]) => `• User ${userId}: $${amt.toFixed(2)}`)
+            .join('\n')
+      );
+
+      fetchEvents();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to close sub-event: ' + err.message);
+    }
+  }
 
   return (
     <div className="container pt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <h1>Admin Portal</h1>
         <button
           className="btn btn-primary"
@@ -412,12 +425,31 @@ export default function AdminPortal() {
       <h2>All Events</h2>
       <div className="accordion" id="eventsAccordion">
         {events.map(ev => (
-          <div className="card mb-3" key={ev.id}>
+          <div
+            className="card mb-3"
+            key={ev.id}
+            style={{ position: 'relative' }}       // make QR corner absolute
+          >
             <div className="card-header">
               <h5>
                 Event #{ev.id} — {ev.name} ({ev.status})
               </h5>
             </div>
+
+            {/* QR Corner */}
+            {ev.status === 'open' && (
+              <div
+                style={qrCornerStyle}
+                onClick={() => setQrModalEventId(ev.id)}
+                title="Click to enlarge QR"
+              >
+                <QRCode
+                  value={`${window.location.origin}/betting?eventId=${ev.id}`}
+                  size={64}
+                />
+              </div>
+            )}
+
             <div className="card-body">
               {editingEventId === ev.id ? (
                 <>
@@ -434,10 +466,7 @@ export default function AdminPortal() {
                   </div>
 
                   {editEventData.subEvents.map((sub, sIdx) => (
-                    <div
-                      key={sub.id}
-                      className="border p-2 mb-2"
-                    >
+                    <div key={sub.id} className="border p-2 mb-2">
                       <div className="mb-2">
                         <label>Sub-Event Name:</label>
                         <input
@@ -615,6 +644,55 @@ export default function AdminPortal() {
           </div>
         ))}
       </div>
+
+      {/* QR Enlarge Modal */}
+      {qrModalEventId && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setQrModalEventId(null)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              background: 'white',
+              padding: 20,
+              borderRadius: 8,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <QRCode
+              value={`${window.location.origin}/betting?eventId=${qrModalEventId}`}
+              size={256}
+            />
+            <button
+              onClick={() => setQrModalEventId(null)}
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                background: 'transparent',
+                border: 'none',
+                fontSize: 18,
+                cursor: 'pointer',
+              }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
