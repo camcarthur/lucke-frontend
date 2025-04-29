@@ -223,7 +223,10 @@ export default function BettingPortal() {
         {/* Sidebar */}
         <aside className="col-12 col-md-4">
           {/* Your Events */}
-          <div className="card shadow-sm mb-4">
+          <div
+            className="card shadow-sm mb-4 text-white"
+            style={{ backgroundColor: '#3a3a3a', borderColor: '#444' }}
+          >
             <div className="card-header">
               <h5 className="mb-0">Your Events</h5>
             </div>
@@ -244,7 +247,10 @@ export default function BettingPortal() {
           </div>
 
           {/* All Events */}
-          <div className="card shadow-sm">
+          <div
+            className="card shadow-sm text-white"
+            style={{ backgroundColor: '#3a3a3a', borderColor: '#444' }}
+          >
             <div className="card-header">
               <h5 className="mb-0">All Events</h5>
             </div>
@@ -288,7 +294,10 @@ export default function BettingPortal() {
               Select an event
             </div>
           ) : (
-            <div className="card shadow-sm">
+            <div
+              className="card shadow-sm text-white"
+              style={{ backgroundColor: '#3a3a3a', borderColor: '#444' }}
+            >
               <div className="card-header d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">{selectedEvent.name}</h5>
                 <span
