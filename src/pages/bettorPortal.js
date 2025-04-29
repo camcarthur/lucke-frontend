@@ -199,6 +199,12 @@ export default function BettingPortal() {
                 Withdraw
               </button>
               <button
+                className="btn btn-sm btn-outline-success me-2"
+                onClick={() => navigate('/deposit')}
+              >
+                Deposit
+              </button>
+              <button
                 className="btn btn-sm btn-outline-light"
                 onClick={handleLogout}
               >

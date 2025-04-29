@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import Withdraw from './pages/Withdraw';
 import Archive from './pages/Archive';
+import Deposit from './pages/Deposit';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         />
         <Route path="/withdraw" element={<Withdraw />} />
         <Route path="/archive" element={<Archive />} />
+        <Route path="/deposit" element={<Deposit />} />
       </Routes>
     </Router>
   );
