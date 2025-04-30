@@ -271,7 +271,10 @@ export default function AdminPortal() {
       </button>
 
       {isCreating && (
-        <div className="card p-3 mb-4">
+        <div
+          className="card p-3 mb-4 text-white"
+          style={{ backgroundColor: '#3a3a3a', borderColor: '#444' }}
+        >
           <h3>Create New Event</h3>
           <form onSubmit={handleCreateEvent}>
             <div className="mb-3">
