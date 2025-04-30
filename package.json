@@ -50,7 +50,10 @@
     "moduleFileExtensions": [
       "js",
       "jsx"
-    ]
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+    }
   },
   "devDependencies": {
     "@babel/core": "latest",
