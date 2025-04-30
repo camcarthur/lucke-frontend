@@ -247,465 +247,472 @@ export default function AdminPortal() {
 
   return (
     <div
-      className="container pt-4 text-white"
       style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 100%)',
       }}
     >
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-        <h1>Admin Portal</h1>
-        <button
-          className="btn btn-success"
-          onClick={() => navigate('/betting')}
-        >
-          To Homepage
-        </button>
-      </div>
-
-      <button
-        className="btn btn-success mb-3"
-        onClick={handleNewEventClick}
+      <div
+        className="container pt-4 text-white"
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 100%)',
+        }}
       >
-        New Event
-      </button>
-
-      {isCreating && (
-        <div
-          className="card p-3 mb-4 text-white"
-          style={{ backgroundColor: '#3a3a3a', borderColor: '#444' }}
-        >
-          <h3>Create New Event</h3>
-          <form onSubmit={handleCreateEvent}>
-            <div className="mb-3">
-              <label>Event Name:</label>
-              <input
-                type="text"
-                className="form-control"
-                value={eventName}
-                onChange={e => setEventName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <h4>Sub Events</h4>
-              <button
-                type="button"
-                className="btn btn-outline-success mb-3"
-                onClick={handleAddSubEvent}
-              >
-                Add Sub Event
-              </button>
-
-              {subEvents.map((sub, idx) =>
-                collapsedSubs[sub.id] ? (
-                  <div
-                    key={sub.id}
-                    className="border p-3 mb-3 d-flex justify-content-between align-items-center"
-                  >
-                    <strong>
-                      {sub.name || `Sub Event ${idx + 1}`}
-                    </strong>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() =>
-                        setCollapsedSubs(cs => ({
-                          ...cs,
-                          [sub.id]: false,
-                        }))
-                      }
-                    >
-                      Edit
-                    </button>
-                  </div>
-                ) : (
-                  <div key={sub.id} className="border p-3 mb-3">
-                    <div className="mb-3">
-                      <label>Sub Event Name:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={sub.name}
-                        onChange={e =>
-                          handleSubEventNameChange(idx, e.target.value)
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label>Contestant Count:</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        min="1"
-                        value={sub.contestantCount}
-                        onChange={e =>
-                          handleSubEventContestantCountChange(
-                            idx,
-                            Number(e.target.value)
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label>Game Type:</label>
-                      <select
-                        className="form-control"
-                        value={sub.gameType}
-                        onChange={e =>
-                          handleSubEventGameTypeChange(idx, e.target.value)
-                        }
-                      >
-                        <option value="default">Default</option>
-                        <option value="first-come-first-serve">
-                          First Come First Serve
-                        </option>
-                        <option value="bidding">Bidding</option>
-                      </select>
-                    </div>
-
-                    {sub.contestants.map((c, cIdx) => (
-                      <div key={c.id} className="mb-3">
-                        <label>Contestant #{c.id} Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={c.name}
-                          onChange={e =>
-                            handleSubEventContestantChange(
-                              idx,
-                              cIdx,
-                              'name',
-                              e.target.value
-                            )
-                          }
-                          required
-                        />
-                        <label>
-                          {sub.gameType === 'bidding'
-                            ? 'Initial Bid Price'
-                            : 'Price'}
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          min="0"
-                          value={c.price}
-                          onChange={e =>
-                            handleSubEventContestantChange(
-                              idx,
-                              cIdx,
-                              'price',
-                              e.target.value
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                    ))}
-
-                    <button
-                      type="button"
-                      className="btn btn-success"
-                      onClick={() => handleSaveSubEvent(sub.id)}
-                    >
-                      Save Sub Event
-                    </button>
-                  </div>
-                )
-              )}
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-success"
-              disabled={!eventName.trim() || subEvents.length === 0}
-            >
-              Create Event
-            </button>
-          </form>
-        </div>
-      )}
-
-      <hr />
-
-      <h2>All Events</h2>
-      <div className="accordion" id="eventsAccordion">
-        {events.map(ev => (
-          <div
-            className="card mb-3 text-white"
-            key={ev.id}
-            style={{
-              position: 'relative',
-              backgroundColor: '#3a3a3a',
-              borderColor: '#444',
-            }}
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+          <h1>Admin Portal</h1>
+          <button
+            className="btn btn-success"
+            onClick={() => navigate('/betting')}
           >
-            <div className="card-header">
-              <h5>
-                Event #{ev.id} — {ev.name} ({ev.status})
-              </h5>
-            </div>
+            To Homepage
+          </button>
+        </div>
 
-            {/* QR Corner */}
-            {ev.status === 'open' && (
-              <div
-                style={qrCornerStyle}
-                onClick={() => setQrModalEventId(ev.id)}
-                title="Click to enlarge QR"
-              >
-                <QRCode
-                  value={`${window.location.origin}/betting?eventId=${ev.id}`}
-                  size={64}
+        <button
+          className="btn btn-success mb-3"
+          onClick={handleNewEventClick}
+        >
+          New Event
+        </button>
+
+        {isCreating && (
+          <div
+            className="card p-3 mb-4 text-white"
+            style={{ backgroundColor: '#3a3a3a', borderColor: '#444' }}
+          >
+            <h3>Create New Event</h3>
+            <form onSubmit={handleCreateEvent}>
+              <div className="mb-3">
+                <label>Event Name:</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={eventName}
+                  onChange={e => setEventName(e.target.value)}
+                  required
                 />
               </div>
-            )}
 
-            <div className="card-body">
-              {editingEventId === ev.id ? (
-                <>
-                  <div className="mb-3">
-                    <label>Edit Event Name:</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={editEventData.name}
-                      onChange={e =>
-                        handleEditChange('name', e.target.value)
-                      }
-                    />
-                  </div>
+              <div>
+                <h4>Sub Events</h4>
+                <button
+                  type="button"
+                  className="btn btn-outline-success mb-3"
+                  onClick={handleAddSubEvent}
+                >
+                  Add Sub Event
+                </button>
 
-                  {editEventData.subEvents.map((sub, sIdx) => (
-                    <div key={sub.id} className="border p-2 mb-2">
-                      <div className="mb-2">
-                        <label>Sub-Event Name:</label>
+                {subEvents.map((sub, idx) =>
+                  collapsedSubs[sub.id] ? (
+                    <div
+                      key={sub.id}
+                      className="border p-3 mb-3 d-flex justify-content-between align-items-center"
+                    >
+                      <strong>
+                        {sub.name || `Sub Event ${idx + 1}`}
+                      </strong>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() =>
+                          setCollapsedSubs(cs => ({
+                            ...cs,
+                            [sub.id]: false,
+                          }))
+                        }
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  ) : (
+                    <div key={sub.id} className="border p-3 mb-3">
+                      <div className="mb-3">
+                        <label>Sub Event Name:</label>
                         <input
                           type="text"
                           className="form-control"
                           value={sub.name}
                           onChange={e =>
-                            handleEditSubEventChange(
-                              sIdx,
-                              'name',
-                              e.target.value
+                            handleSubEventNameChange(idx, e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label>Contestant Count:</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          min="1"
+                          value={sub.contestantCount}
+                          onChange={e =>
+                            handleSubEventContestantCountChange(
+                              idx,
+                              Number(e.target.value)
                             )
                           }
                         />
                       </div>
-                      {sub.contestants.map((c, cIdx) => (
-                        <div
-                          key={c.id}
-                          className="d-flex gap-2 mb-2"
+                      <div className="mb-3">
+                        <label>Game Type:</label>
+                        <select
+                          className="form-control"
+                          value={sub.gameType}
+                          onChange={e =>
+                            handleSubEventGameTypeChange(idx, e.target.value)
+                          }
                         >
+                          <option value="default">Default</option>
+                          <option value="first-come-first-serve">
+                            First Come First Serve
+                          </option>
+                          <option value="bidding">Bidding</option>
+                        </select>
+                      </div>
+
+                      {sub.contestants.map((c, cIdx) => (
+                        <div key={c.id} className="mb-3">
+                          <label>Contestant #{c.id} Name</label>
                           <input
                             type="text"
                             className="form-control"
                             value={c.name}
                             onChange={e =>
-                              handleEditContestantChange(
-                                sIdx,
+                              handleSubEventContestantChange(
+                                idx,
                                 cIdx,
                                 'name',
                                 e.target.value
                               )
                             }
-                            placeholder="Contestant Name"
+                            required
                           />
+                          <label>
+                            {sub.gameType === 'bidding'
+                              ? 'Initial Bid Price'
+                              : 'Price'}
+                          </label>
                           <input
                             type="number"
                             className="form-control"
+                            min="0"
                             value={c.price}
                             onChange={e =>
-                              handleEditContestantChange(
-                                sIdx,
+                              handleSubEventContestantChange(
+                                idx,
                                 cIdx,
                                 'price',
                                 e.target.value
                               )
                             }
-                            placeholder="Price"
+                            required
                           />
                         </div>
                       ))}
+
+                      <button
+                        type="button"
+                        className="btn btn-success"
+                        onClick={() => handleSaveSubEvent(sub.id)}
+                      >
+                        Save Sub Event
+                      </button>
                     </div>
-                  ))}
+                  )
+                )}
+              </div>
 
-                  <button
-                    className="btn btn-success me-2"
-                    onClick={() => handleSaveEdit(ev.id)}
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={handleCancelEdit}
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    className="btn btn-warning btn-sm mb-3"
-                    onClick={() => handleEditClick(ev)}
-                  >
-                    Edit Event
-                  </button>
-
-                  <h6>Main Contestants</h6>
-                  {ev.contestants.map(c => (
-                    <div
-                      key={c.id}
-                      className="d-flex justify-content-between align-items-center mb-2"
-                    >
-                      <span>
-                        {c.name} — ${c.price}
-                        {ev.winningContestant === c.id && (
-                          <Trophy
-                            size={16}
-                            strokeWidth={1.5}
-                            className="ms-2 text-warning"
-                            aria-label="Winner"
-                          />
-                        )}
-                      </span>
-                      {ev.status === 'open' && (
-                        <button
-                          className="btn btn-sm btn-outline-success"
-                          onClick={() =>
-                            handleDeclareWinner(ev.id, c.id)
-                          }
-                        >
-                          Set Winner
-                        </button>
-                      )}
-                    </div>
-                  ))}
-
-                  {ev.subEvents?.length > 0 && (
-                    <>
-                      <h6 className="mt-3">Sub Events</h6>
-                      {ev.subEvents.map(sub => (
-                        <div
-                          key={sub.id}
-                          className="mb-3 border p-2"
-                        >
-                          <strong>
-                            {sub.name} ({sub.status})
-                          </strong>
-                          {sub.contestants.map(c => (
-                            <div
-                              key={c.id}
-                              className="d-flex justify-content-between align-items-center mt-1"
-                            >
-                              <span>
-                                {c.name} — ${c.price}
-                                {sub.winningContestant === c.id && (
-                                  <Trophy
-                                    size={14}
-                                    strokeWidth={1.4}
-                                    className="ms-2 text-warning"
-                                    aria-label="Winner"
-                                  />
-                                )}
-                              </span>
-                              {sub.status === 'open' && (
-                                <button
-                                  className="btn btn-sm btn-outline-success"
-                                  onClick={() =>
-                                    handleDeclareSubWinner(
-                                      ev.id,
-                                      sub.id,
-                                      c.id
-                                    )
-                                  }
-                                >
-                                  Set Sub Winner
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                          {sub.status === 'open' && (
-                            <button
-                              className="btn btn-danger btn-sm mt-2"
-                              onClick={() =>
-                                handleCloseSubEvent(ev.id, sub.id)
-                              }
-                            >
-                              Close Sub-Event
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </>
-                  )}
-
-                  {ev.status === 'open' && (
-                    <button
-                      className="btn btn-danger mt-3"
-                      onClick={() => handleClose(ev.id)}
-                    >
-                      Close Main Event
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
+              <button
+                type="submit"
+                className="btn btn-success"
+                disabled={!eventName.trim() || subEvents.length === 0}
+              >
+                Create Event
+              </button>
+            </form>
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* QR Enlarge Modal */}
-      {qrModalEventId && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0,0,0,0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => setQrModalEventId(null)}
-        >
+        <hr />
+
+        <h2>All Events</h2>
+        <div className="accordion" id="eventsAccordion">
+          {events.map(ev => (
+            <div
+              className="card mb-3 text-white"
+              key={ev.id}
+              style={{
+                position: 'relative',
+                backgroundColor: '#3a3a3a',
+                borderColor: '#444',
+              }}
+            >
+              <div className="card-header">
+                <h5>
+                  Event #{ev.id} — {ev.name} ({ev.status})
+                </h5>
+              </div>
+
+              {/* QR Corner */}
+              {ev.status === 'open' && (
+                <div
+                  style={qrCornerStyle}
+                  onClick={() => setQrModalEventId(ev.id)}
+                  title="Click to enlarge QR"
+                >
+                  <QRCode
+                    value={`${window.location.origin}/betting?eventId=${ev.id}`}
+                    size={64}
+                  />
+                </div>
+              )}
+
+              <div className="card-body">
+                {editingEventId === ev.id ? (
+                  <>
+                    <div className="mb-3">
+                      <label>Edit Event Name:</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editEventData.name}
+                        onChange={e =>
+                          handleEditChange('name', e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {editEventData.subEvents.map((sub, sIdx) => (
+                      <div key={sub.id} className="border p-2 mb-2">
+                        <div className="mb-2">
+                          <label>Sub-Event Name:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={sub.name}
+                            onChange={e =>
+                              handleEditSubEventChange(
+                                sIdx,
+                                'name',
+                                e.target.value
+                              )
+                            }
+                          />
+                        </div>
+                        {sub.contestants.map((c, cIdx) => (
+                          <div
+                            key={c.id}
+                            className="d-flex gap-2 mb-2"
+                          >
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={c.name}
+                              onChange={e =>
+                                handleEditContestantChange(
+                                  sIdx,
+                                  cIdx,
+                                  'name',
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Contestant Name"
+                            />
+                            <input
+                              type="number"
+                              className="form-control"
+                              value={c.price}
+                              onChange={e =>
+                                handleEditContestantChange(
+                                  sIdx,
+                                  cIdx,
+                                  'price',
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Price"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+
+                    <button
+                      className="btn btn-success me-2"
+                      onClick={() => handleSaveEdit(ev.id)}
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={handleCancelEdit}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="btn btn-warning btn-sm mb-3"
+                      onClick={() => handleEditClick(ev)}
+                    >
+                      Edit Event
+                    </button>
+
+                    <h6>Main Contestants</h6>
+                    {ev.contestants.map(c => (
+                      <div
+                        key={c.id}
+                        className="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <span>
+                          {c.name} — ${c.price}
+                          {ev.winningContestant === c.id && (
+                            <Trophy
+                              size={16}
+                              strokeWidth={1.5}
+                              className="ms-2 text-warning"
+                              aria-label="Winner"
+                            />
+                          )}
+                        </span>
+                        {ev.status === 'open' && (
+                          <button
+                            className="btn btn-sm btn-outline-success"
+                            onClick={() =>
+                              handleDeclareWinner(ev.id, c.id)
+                            }
+                          >
+                            Set Winner
+                          </button>
+                        )}
+                      </div>
+                    ))}
+
+                    {ev.subEvents?.length > 0 && (
+                      <>
+                        <h6 className="mt-3">Sub Events</h6>
+                        {ev.subEvents.map(sub => (
+                          <div
+                            key={sub.id}
+                            className="mb-3 border p-2"
+                          >
+                            <strong>
+                              {sub.name} ({sub.status})
+                            </strong>
+                            {sub.contestants.map(c => (
+                              <div
+                                key={c.id}
+                                className="d-flex justify-content-between align-items-center mt-1"
+                              >
+                                <span>
+                                  {c.name} — ${c.price}
+                                  {sub.winningContestant === c.id && (
+                                    <Trophy
+                                      size={14}
+                                      strokeWidth={1.4}
+                                      className="ms-2 text-warning"
+                                      aria-label="Winner"
+                                    />
+                                  )}
+                                </span>
+                                {sub.status === 'open' && (
+                                  <button
+                                    className="btn btn-sm btn-outline-success"
+                                    onClick={() =>
+                                      handleDeclareSubWinner(
+                                        ev.id,
+                                        sub.id,
+                                        c.id
+                                      )
+                                    }
+                                  >
+                                    Set Sub Winner
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            {sub.status === 'open' && (
+                              <button
+                                className="btn btn-danger btn-sm mt-2"
+                                onClick={() =>
+                                  handleCloseSubEvent(ev.id, sub.id)
+                                }
+                              >
+                                Close Sub-Event
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {ev.status === 'open' && (
+                      <button
+                        className="btn btn-danger mt-3"
+                        onClick={() => handleClose(ev.id)}
+                      >
+                        Close Main Event
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* QR Enlarge Modal */}
+        {qrModalEventId && (
           <div
             style={{
-              position: 'relative',
-              background: 'white',
-              padding: 20,
-              borderRadius: 8,
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'rgba(0,0,0,0.8)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000,
             }}
-            onClick={e => e.stopPropagation()}
+            onClick={() => setQrModalEventId(null)}
           >
-            <QRCode
-              value={`${window.location.origin}/betting?eventId=${qrModalEventId}`}
-              size={256}
-            />
-            <button
-              onClick={() => setQrModalEventId(null)}
+            <div
               style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                background: 'transparent',
-                border: 'none',
-                fontSize: 18,
-                cursor: 'pointer',
+                position: 'relative',
+                background: 'white',
+                padding: 20,
+                borderRadius: 8,
               }}
-              aria-label="Close"
+              onClick={e => e.stopPropagation()}
             >
-              ✕
-            </button>
+              <QRCode
+                value={`${window.location.origin}/betting?eventId=${qrModalEventId}`}
+                size={256}
+              />
+              <button
+                onClick={() => setQrModalEventId(null)}
+                style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                }}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
