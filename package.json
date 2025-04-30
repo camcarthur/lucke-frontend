@@ -42,10 +42,23 @@
   "devDependencies": {
     "@babel/core": "latest",
     "@babel/eslint-parser": "latest",
-    "@babel/preset-react": "latest",
+    "@babel/preset-env": "^7.27.1",
+    "@babel/preset-react": "^7.27.1",
     "@eslint/js": "latest",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "babel-jest": "^29.7.0",
     "eslint": "latest",
     "eslint-plugin-react": "latest",
-    "globals": "latest"
+    "globals": "latest",
+    "jest": "^27.5.1"
+  },
+  "jest": {
+    "setupFilesAfterEnv": ["<rootDir>/tests/setupTests.js"],
+    "testEnvironment": "jsdom",
+    "transform": {
+      "^.+\\.(js|jsx)$": "babel-jest"
+    },
+    "moduleFileExtensions": ["js", "jsx"]
   }
 }
