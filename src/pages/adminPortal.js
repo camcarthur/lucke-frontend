@@ -175,6 +175,28 @@ export default function AdminPortal() {
     }
   }
 
+  async function handleRefund(eventId) {
+    if (!window.confirm("Are you sure you want to refund all bets and close all sub-events? This cannot be undone.")) return;
+    try {
+      const res = await apiFetch(`/api/events/${eventId}/refund`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('Error refunding event:', data.error);
+        alert(`Error: ${data.error}`);
+        return;
+      }
+      alert(`Refund completed. All sub-events closed and bets refunded.\n\nRefunds:\n${Object.entries(data.refunds)
+        .map(([uid, amt]) => `• User ${uid}: $${amt.toFixed(2)}`)
+        .join('\n')}`);
+      fetchEvents();
+    } catch (error) {
+      console.error(error);
+      alert('Unexpected error refunding event.');
+    }
+  }  
+
   async function handleClose(eventId) {
     try {
       const res = await apiFetch(`/api/events/${eventId}/close`, {
@@ -648,14 +670,26 @@ export default function AdminPortal() {
                         ))}
                       </>
                     )}
-
                     {ev.status === 'open' && (
-                      <button
-                        className="btn btn-danger mt-3"
-                        onClick={() => handleClose(ev.id)}
-                      >
-                        Close Main Event
-                      </button>
+                      <>
+                        <button
+                          className="btn btn-danger mt-3 me-2"
+                          onClick={() => handleClose(ev.id)}
+                        >
+                          Close Main Event
+                        </button>
+                        <button
+                          className="btn"
+                          style={{
+                            backgroundColor: '#ff8800',
+                            color: 'white',
+                            marginTop: '12px',
+                          }}
+                          onClick={() => handleRefund(ev.id)}
+                        >
+                          Refund & Close All
+                        </button>
+                      </>
                     )}
                   </>
                 )}
