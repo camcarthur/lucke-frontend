@@ -1,4 +1,4 @@
-// src/pages/Withdraw.js
+// src/pages/Deposit.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
