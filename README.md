@@ -61,5 +61,5 @@ Requests are session-authenticated and support CORS credentials.
 For access to demo credentials, production config, or Git integration:
 
 **Colin McArthur**  
-📞 (720)-469-3966 
-📧 colinmcarthur01@gmail.com
+- 📞 (720)-469-3966 
+- 📧 colinmcarthur01@gmail.com
