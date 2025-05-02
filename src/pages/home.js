@@ -13,7 +13,7 @@ function Home() {
     >
       <h1 className="display-4 fw-bold mb-3">Join the Calcutta Showdown</h1>
       <p className="lead mb-4">
-        Compete, bid, and own your favorite contestants.
+        Compete, bid, and profit on your favorite contestants.
       </p>
       <button
         className="btn btn-success fw-semibold px-4"
